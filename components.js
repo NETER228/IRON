@@ -8,7 +8,6 @@ async function loadComponent(elementId, fileName) {
     document.getElementById(elementId).innerHTML = html;
     return true;
   } catch (error) {
-    console.error(`Ошибка загрузки ${fileName}:`, error);
     return false;
   }
 }

@@ -12,14 +12,12 @@ let mouseY = 0;
 let isTyping = false;
 let typingIntensity = 0;
 
-// Для отслеживания карточек
 let hoveredCardX = null;
 let hoveredCardY = null;
 let hoveredCardWidth = null;
 let hoveredCardHeight = null;
 let attractionStrength = 0;
 
-// Цвета в зависимости от темы
 function getParticleColor() {
   const isLight = document.documentElement.classList.contains('light');
   return isLight ? '#1F2937' : '#FFFFFF';
@@ -53,7 +51,6 @@ class Particle {
     this.baseOpacity = Math.random() * 0.4 + 0.3;
     this.opacity = this.baseOpacity;
     this.angle = Math.random() * Math.PI * 2;
-    // Сохраняем скорость, чтобы при смене темы она не менялась
     this.vx = (Math.random() - 0.5) * 0.03;
     this.vy = (Math.random() - 0.5) * 0.03;
     this.orbitPhase = Math.random() * Math.PI * 2;
@@ -61,18 +58,15 @@ class Particle {
   }
 
   update() {
-    // Очень медленное дыхание
     this.angle += 0.01;
     const breath = Math.sin(this.angle) * 0.35;
     this.size = this.baseSize + breath;
     this.opacity = this.baseOpacity + breath * 0.12;
 
-    // Орбитальное/волновое движение
     this.orbitPhase += this.orbitSpeed;
     this.x += Math.sin(this.orbitPhase) * 0.05;
     this.y += Math.cos(this.orbitPhase * 0.7) * 0.05;
 
-    // Притяжение к карточке при наведении
     if (hoveredCardX !== null && attractionStrength > 0) {
       const cardCenterX = hoveredCardX + hoveredCardWidth / 2;
       const cardCenterY = hoveredCardY + hoveredCardHeight / 2;
@@ -89,18 +83,15 @@ class Particle {
       }
     }
 
-    // Случайное блуждание
     this.vx += (Math.random() - 0.5) * 0.008;
     this.vy += (Math.random() - 0.5) * 0.008;
     
-    // Ограничение скорости
     this.vx = Math.max(-0.08, Math.min(0.08, this.vx));
     this.vy = Math.max(-0.08, Math.min(0.08, this.vy));
     
     this.x += this.vx;
     this.y += this.vy;
 
-    // Реакция на мышь (отталкивание)
     if (canvasElement) {
       const dx = this.x - mouseX;
       const dy = this.y - mouseY;
@@ -116,7 +107,6 @@ class Particle {
       }
     }
 
-    // Дрожание при вводе
     if (isTyping || typingIntensity > 0) {
       const intensity = isTyping ? 0.8 : typingIntensity * 0.6;
       this.x += (Math.random() - 0.5) * intensity;
@@ -124,7 +114,6 @@ class Particle {
       this.opacity = Math.min(0.9, this.opacity + 0.15 * (isTyping ? 1 : typingIntensity));
     }
 
-    // Границы с мягким отражением
     const width = canvasElement?.width || window.innerWidth;
     const height = canvasElement?.height || window.innerHeight;
     
@@ -148,7 +137,6 @@ class Particle {
   }
 }
 
-// Рисование связей между близкими точками
 function drawConnections() {
   if (!ctx) return;
   
@@ -193,7 +181,6 @@ function animate() {
   
   drawConnections();
 
-  // Плавное затухание притяжения
   if (attractionStrength > 0) {
     attractionStrength = Math.max(0, attractionStrength - 0.015);
   }
@@ -207,10 +194,7 @@ function animate() {
 
 function initParticles() {
   canvasElement = document.getElementById('canvas');
-  if (!canvasElement) {
-    console.warn("⚠️ Элемент <canvas id='canvas'> не найден на странице");
-    return;
-  }
+  if (!canvasElement) return;
 
   ctx = canvasElement.getContext('2d');
   resizeCanvas();
@@ -221,10 +205,8 @@ function initParticles() {
   }
 
   animate();
-  console.log("✅ Система частиц успешно инициализирована");
 }
 
-// Функция для обновления позиции наведённой карточки
 window.updateHoveredCard = function(element) {
   if (!element) {
     attractionStrength = 0;
@@ -238,9 +220,7 @@ window.updateHoveredCard = function(element) {
   attractionStrength = 1.0;
 };
 
-// Обновление только цветов при смене темы (БЕЗ ПЕРЕСОЗДАНИЯ ЧАСТИЦ)
 window.refreshParticles = function() {
-  // Просто перерисовываем с новыми цветами, не меняя скорости частиц
   clearCanvas();
   if (ctx) {
     particles.forEach(p => p.draw());
@@ -248,7 +228,6 @@ window.refreshParticles = function() {
   }
 };
 
-// События
 window.addEventListener('mousemove', (e) => {
   mouseX = e.clientX;
   mouseY = e.clientY;
@@ -256,7 +235,6 @@ window.addEventListener('mousemove', (e) => {
 
 window.addEventListener('resize', () => {
   resizeCanvas();
-  // При изменении размера окна сохраняем пропорции позиций частиц
   const oldWidth = canvasElement?.width || window.innerWidth;
   const oldHeight = canvasElement?.height || window.innerHeight;
   const scaleX = (canvasElement?.width || window.innerWidth) / oldWidth;
@@ -268,7 +246,6 @@ window.addEventListener('resize', () => {
   });
 });
 
-// Ввод в поиск
 const searchInput = document.getElementById('search-input');
 if (searchInput) {
   searchInput.addEventListener('input', () => {
@@ -282,7 +259,6 @@ if (searchInput) {
   });
 }
 
-// Следим за сменой темы - ТОЛЬКО ОБНОВЛЯЕМ ЦВЕТА, НЕ ПЕРЕСОЗДАЁМ ЧАСТИЦЫ
 const themeObserver = new MutationObserver(() => {
   window.refreshParticles();
 });
