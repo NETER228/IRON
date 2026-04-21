@@ -6,6 +6,109 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Каталог — IRON</title>
   <link rel="stylesheet" href="main.css">
+  <style>
+    /* Дополнительный отступ сверху для контента */
+    body {
+      padding-top: 100px;
+    }
+    
+    /* Строка поиска */
+    .catalog-search {
+      margin-bottom: 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .catalog-search input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-secondary);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: 0.75rem;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+    .catalog-search input:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+    .catalog-search input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Красивые уведомления */
+    .notification {
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      z-index: 10001;
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      background: var(--bg-secondary);
+      border: var(--border-width) solid var(--border-color);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      max-width: 350px;
+    }
+    .notification.show {
+      transform: translateX(0);
+    }
+    .notification.success {
+      border-left: 4px solid #22c55e;
+    }
+    .notification.success .notification-icon {
+      color: #22c55e;
+    }
+    .notification.error {
+      border-left: 4px solid #ef4444;
+    }
+    .notification.error .notification-icon {
+      color: #ef4444;
+    }
+    .notification.info {
+      border-left: 4px solid var(--accent-cyan);
+    }
+    .notification.info .notification-icon {
+      color: var(--accent-cyan);
+    }
+    .notification-icon {
+      font-size: 1.25rem;
+    }
+    .notification-content {
+      flex: 1;
+    }
+    .notification-title {
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .notification-message {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .notification-close {
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      transition: color 0.2s;
+    }
+    .notification-close:hover {
+      color: var(--accent-cyan);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding-top: 140px;
+      }
+      .notification {
+        top: 80px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -32,6 +135,11 @@
     </aside>
 
     <main>
+      <!-- Строка поиска по каталогу -->
+      <div class="catalog-search">
+        <input type="text" id="catalog-search-input" placeholder="Поиск по каталогу... Название товара, производитель, чипсет...">
+      </div>
+
       <div class="top-bar">
         <div class="results-info" id="results-info">Загрузка...</div>
         <div style="display:flex; gap:1rem;">
@@ -131,15 +239,61 @@
   <script src="particles.js"></script>
 
   <script>
+    // ==================== УВЕДОМЛЕНИЯ ====================
+    function showNotification(title, message, type = 'info') {
+      const existingNotification = document.querySelector('.notification');
+      if (existingNotification) {
+        existingNotification.remove();
+      }
+      
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <div class="notification-icon">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</div>
+        <div class="notification-content">
+          <div class="notification-title">${title}</div>
+          <div class="notification-message">${message}</div>
+        </div>
+        <div class="notification-close">✕</div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.classList.add('show');
+      }, 10);
+      
+      const closeBtn = notification.querySelector('.notification-close');
+      closeBtn.addEventListener('click', () => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      });
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 4000);
+    }
+
     // ==================== SUPABASE КОНФИГУРАЦИЯ ====================
     const SUPABASE_URL = 'https://wmsocaoixfhcicczgklb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indtc29jYW9peGZoY2ljY3pna2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTEzMTQsImV4cCI6MjA5MTQ4NzMxNH0.1pKUY3VDqO0K8xZFi_XGMcwYSiMNxB-_cH8nUOWA6fw';
 
-    // ==================== ПОДСВЕТКА КНОПКИ ПРИ ПЕРЕХОДЕ ИЗ ПОИСКА ====================
+    // ==================== ПЕРЕМЕННЫЕ ====================
+    let allProducts = [];
+    let filteredProducts = [];
+    let currentCategory = 'gpu';
+    let currentPage = 1;
+    let itemsPerPage = 24;
+    let totalPages = 1;
+    let compareList = JSON.parse(localStorage.getItem('iron_compare_list') || '[]');
+    let searchQuery = '';
+    let searchTimeout = null;
+
+    // ==================== ПОДСВЕТКА КНОПКИ ====================
     function checkHighlight() {
       const urlParams = new URLSearchParams(window.location.search);
       const highlight = urlParams.get('highlight');
-      
       if (highlight === 'suggest') {
         const suggestBtn = document.getElementById('suggest-btn');
         if (suggestBtn) {
@@ -151,24 +305,20 @@
       }
     }
 
-    // ==================== ФУНКЦИЯ ПРОВЕРКИ URL ====================
+    // ==================== ПРОВЕРКА URL ====================
     function isValidUrl(url) {
       if (!url) return false;
       if (url.trim() === '') return false;
-      
       const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
       if (!urlPattern.test(url)) return false;
-      
       const hasDot = url.match(/\.(ru|com|net|org|io|me|su|рф|[a-z]{2,})/i);
       if (!hasDot) return false;
-      
       const forbiddenChars = /[<>{}|\\^`]/;
       if (forbiddenChars.test(url)) return false;
-      
       return true;
     }
 
-    // ==================== ФУНКЦИЯ ОТПРАВКИ ПРЕДЛОЖЕНИЯ ====================
+    // ==================== ОТПРАВКА ПРЕДЛОЖЕНИЯ ====================
     async function submitSuggestion() {
       const category = document.getElementById('suggest-category').value;
       const name = document.getElementById('suggest-name').value.trim();
@@ -177,23 +327,23 @@
       const contact = document.getElementById('suggest-contact').value.trim();
       
       if (!category) {
-        alert('Выберите категорию');
+        showNotification('Ошибка', 'Выберите категорию', 'error');
         return;
       }
       if (!name) {
-        alert('Введите название товара');
+        showNotification('Ошибка', 'Введите название товара', 'error');
         return;
       }
       if (name.length < 3) {
-        alert('Название товара слишком короткое (минимум 3 символа)');
+        showNotification('Ошибка', 'Название товара слишком короткое (минимум 3 символа)', 'error');
         return;
       }
       if (name.length > 200) {
-        alert('Название товара слишком длинное (максимум 200 символов)');
+        showNotification('Ошибка', 'Название товара слишком длинное (максимум 200 символов)', 'error');
         return;
       }
       if (!url) {
-        alert('Введите ссылку на товар');
+        showNotification('Ошибка', 'Введите ссылку на товар', 'error');
         return;
       }
       
@@ -202,22 +352,22 @@
       }
       
       if (!isValidUrl(url)) {
-        alert('Пожалуйста, введите корректную ссылку. Пример: example.com/shop  или  https://market.ru/product');
+        showNotification('Ошибка', 'Пожалуйста, введите корректную ссылку', 'error');
         return;
       }
       
       if (url.length > 500) {
-        alert('Ссылка слишком длинная (максимум 500 символов)');
+        showNotification('Ошибка', 'Ссылка слишком длинная (максимум 500 символов)', 'error');
         return;
       }
       
       if (details && details.length > 1000) {
-        alert('Дополнительная информация слишком длинная (максимум 1000 символов)');
+        showNotification('Ошибка', 'Дополнительная информация слишком длинная (максимум 1000 символов)', 'error');
         return;
       }
       
       if (contact && contact.length > 100) {
-        alert('Контактные данные слишком длинные (максимум 100 символов)');
+        showNotification('Ошибка', 'Контактные данные слишком длинные (максимум 100 символов)', 'error');
         return;
       }
       
@@ -247,37 +397,14 @@
           document.getElementById('suggest-details').value = '';
           document.getElementById('suggest-contact').value = '';
           
-          const modalBody = document.querySelector('#suggest-modal .modal-body');
-          const originalContent = modalBody.innerHTML;
-          modalBody.innerHTML = `
-            <div class="success-message">
-              <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
-              <h3 style="margin-bottom: 0.5rem;">Спасибо за предложение!</h3>
-              <p style="color: var(--text-muted);">Мы рассмотрим ваш товар в ближайшее время.</p>
-            </div>
-          `;
-          
-          setTimeout(() => {
-            modalBody.innerHTML = originalContent;
-            closeSuggestModal();
-          }, 3000);
+          closeSuggestModal();
+          showNotification('Спасибо!', 'Ваше предложение отправлено. Мы рассмотрим его в ближайшее время.', 'success');
         } else {
           throw new Error('Ошибка отправки');
         }
       } catch (error) {
         console.error('Ошибка:', error);
-        const modalBody = document.querySelector('#suggest-modal .modal-body');
-        const originalContent = modalBody.innerHTML;
-        modalBody.innerHTML = `
-          <div class="error-message">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
-            <h3 style="margin-bottom: 0.5rem;">Ошибка отправки</h3>
-            <p style="color: var(--text-muted);">Проверьте ссылку или попробуйте позже.</p>
-          </div>
-        `;
-        setTimeout(() => {
-          modalBody.innerHTML = originalContent;
-        }, 3000);
+        showNotification('Ошибка', 'Не удалось отправить предложение. Попробуйте позже.', 'error');
       }
     }
 
@@ -285,12 +412,84 @@
     window.openSuggestModal = function() {
       document.getElementById('suggest-modal').classList.add('active');
     };
-
     window.closeSuggestModal = function() {
       document.getElementById('suggest-modal').classList.remove('active');
     };
+    window.openCompareModal = function() {
+      const modal = document.getElementById('compare-modal');
+      const body = document.getElementById('compare-modal-body');
+      if (compareList.length === 0) {
+        body.innerHTML = '<div class="empty-compare">Нет товаров для сравнения</div>';
+      } else {
+        body.innerHTML = compareList.map(item => `
+          <div class="compare-list-item">
+            <div class="compare-item-info">
+              <div class="compare-item-name">${escapeHtml(item.name.substring(0, 50))}${item.name.length > 50 ? '...' : ''}</div>
+              <div class="compare-item-category">${CATEGORIES[item.category]?.name || item.category}</div>
+            </div>
+            <button class="remove-item-btn" onclick="removeFromCompare('${item.id}', event)">Удалить</button>
+          </div>
+        `).join('');
+      }
+      modal.classList.add('active');
+    };
+    window.closeCompareModal = function() {
+      document.getElementById('compare-modal').classList.remove('active');
+    };
+    window.removeFromCompare = function(id, event) {
+      if (event) event.stopPropagation();
+      compareList = compareList.filter(item => item.id !== id);
+      localStorage.setItem('iron_compare_list', JSON.stringify(compareList));
+      updateCompareBar();
+      openCompareModal();
+    };
+    window.goToComparePage = function() {
+      if (compareList.length < 2) {
+        showNotification('Внимание', 'Добавьте минимум 2 товара для сравнения', 'info');
+        return;
+      }
+      window.location.href = `compare.html?ids=${compareList.map(item => `${item.category}:${item.id}`).join(',')}`;
+    };
+    window.goToCompare = function() {
+      if (compareList.length < 2) {
+        showNotification('Внимание', 'Добавьте минимум 2 товара для сравнения', 'info');
+        return;
+      }
+      window.location.href = `compare.html?ids=${compareList.map(item => `${item.category}:${item.id}`).join(',')}`;
+    };
 
-    // ==================== НОРМАЛИЗАЦИЯ ПРОИЗВОДИТЕЛЕЙ ====================
+    function updateCompareBar() {
+      const bar = document.getElementById('compare-bar');
+      const countSpan = document.getElementById('compare-count');
+      if (compareList.length > 0) {
+        bar.style.display = 'flex';
+        countSpan.textContent = compareList.length;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    window.addToCompare = function(id, name, category, event) {
+      if (event) event.stopPropagation();
+      if (compareList.length > 0 && compareList[0].category !== category) {
+        showNotification('Ошибка', `Нельзя сравнивать товары из разных категорий! У вас уже есть ${CATEGORIES[compareList[0].category]?.name} в списке.`, 'error');
+        return;
+      }
+      if (compareList.some(item => item.id === id)) {
+        showNotification('Внимание', `${name} уже в списке сравнения`, 'info');
+        return;
+      }
+      if (compareList.length >= 4) {
+        showNotification('Внимание', 'Можно сравнивать не более 4 товаров одновременно', 'info');
+        return;
+      }
+      compareList.push({ id, name, category });
+      localStorage.setItem('iron_compare_list', JSON.stringify(compareList));
+      updateCompareBar();
+      showNotification('Добавлено', `${name} добавлен в сравнение`, 'success');
+    };
+
+    // ==================== НОРМАЛИЗАЦИЯ ====================
     function normalizeManufacturer(name) {
       if (!name) return '';
       let normalized = name.trim();
@@ -492,109 +691,96 @@
       }
     };
 
-    let allProducts = [];
-    let filteredProducts = [];
-    let currentCategory = 'gpu';
-    let currentPage = 1;
-    let itemsPerPage = 24;
-    let totalPages = 1;
-    
-    let compareList = JSON.parse(localStorage.getItem('iron_compare_list') || '[]');
-
-    // ==================== ФУНКЦИИ СРАВНЕНИЯ ====================
-    window.openCompareModal = function() {
-      const modal = document.getElementById('compare-modal');
-      const body = document.getElementById('compare-modal-body');
-      if (compareList.length === 0) {
-        body.innerHTML = '<div class="empty-compare">Нет товаров для сравнения</div>';
-      } else {
-        body.innerHTML = compareList.map(item => `
-          <div class="compare-list-item">
-            <div class="compare-item-info">
-              <div class="compare-item-name">${escapeHtml(item.name.substring(0, 50))}${item.name.length > 50 ? '...' : ''}</div>
-              <div class="compare-item-category">${CATEGORIES[item.category]?.name || item.category}</div>
-            </div>
-            <button class="remove-item-btn" onclick="removeFromCompare('${item.id}', event)">Удалить</button>
-          </div>
-        `).join('');
-      }
-      modal.classList.add('active');
-    };
-
-    window.closeCompareModal = function() {
-      document.getElementById('compare-modal').classList.remove('active');
-    };
-
-    window.removeFromCompare = function(id, event) {
-      if (event) event.stopPropagation();
-      compareList = compareList.filter(item => item.id !== id);
-      localStorage.setItem('iron_compare_list', JSON.stringify(compareList));
-      updateCompareBar();
-      openCompareModal();
-    };
-
-    window.goToComparePage = function() {
-      if (compareList.length < 2) {
-        alert('Добавьте минимум 2 товара для сравнения');
-        return;
-      }
-      window.location.href = `compare.html?ids=${compareList.map(item => `${item.category}:${item.id}`).join(',')}`;
-    };
-
-    window.goToCompare = function() {
-      if (compareList.length < 2) {
-        alert('Добавьте минимум 2 товара для сравнения');
-        return;
-      }
-      window.location.href = `compare.html?ids=${compareList.map(item => `${item.category}:${item.id}`).join(',')}`;
-    };
-
-    function updateCompareBar() {
-      const bar = document.getElementById('compare-bar');
-      const countSpan = document.getElementById('compare-count');
-      if (compareList.length > 0) {
-        bar.style.display = 'flex';
-        countSpan.textContent = compareList.length;
-      } else {
-        bar.style.display = 'none';
-      }
+    // ==================== ФУНКЦИЯ ПОИСКА ====================
+    function filterBySearch(products, query) {
+      if (!query || query.trim() === '') return products;
+      const lowerQuery = query.toLowerCase().trim();
+      const config = CATEGORIES[currentCategory];
+      return products.filter(product => {
+        const name = config.getName(product).toLowerCase();
+        if (name.includes(lowerQuery)) return true;
+        const manufacturer = config.getManufacturer(product).toLowerCase();
+        if (manufacturer.includes(lowerQuery)) return true;
+        const specs = config.getSpecs(product);
+        for (const spec of specs) {
+          if (spec.value.toLowerCase().includes(lowerQuery)) return true;
+        }
+        if (product.chipset && product.chipset.toLowerCase().includes(lowerQuery)) return true;
+        if (product.chipset_manufacturer && product.chipset_manufacturer.toLowerCase().includes(lowerQuery)) return true;
+        if (product.socket && product.socket.toLowerCase().includes(lowerQuery)) return true;
+        if (product.ram_type && product.ram_type.toLowerCase().includes(lowerQuery)) return true;
+        if (product.type && product.type.toLowerCase().includes(lowerQuery)) return true;
+        return false;
+      });
     }
 
-    window.addToCompare = function(id, name, category, event) {
-      if (event) event.stopPropagation();
-      if (compareList.length > 0 && compareList[0].category !== category) {
-        alert(`Нельзя сравнивать товары из разных категорий! У вас уже есть ${CATEGORIES[compareList[0].category]?.name} в списке.`);
-        return;
-      }
-      if (compareList.some(item => item.id === id)) {
-        alert(`${name} уже в списке сравнения`);
-        return;
-      }
-      if (compareList.length >= 4) {
-        alert('Можно сравнивать не более 4 товаров одновременно');
-        return;
-      }
-      compareList.push({ id, name, category });
-      localStorage.setItem('iron_compare_list', JSON.stringify(compareList));
-      updateCompareBar();
-      alert(`${name} добавлен в сравнение`);
-    };
+    function updateSearchAndFilter() {
+      const searchInputField = document.getElementById('catalog-search-input');
+      searchQuery = searchInputField ? searchInputField.value : '';
+      let filtered = filterBySearch(allProducts, searchQuery);
+      const config = CATEGORIES[currentCategory];
+      
+      const selectedManufacturers = Array.from(document.querySelectorAll('.filter-manufacturer:checked')).map(cb => cb.value);
+      if (selectedManufacturers.length) filtered = filtered.filter(p => selectedManufacturers.includes(config.getManufacturer(p)));
+      const selectedChipsets = Array.from(document.querySelectorAll('.filter-chipset:checked')).map(cb => cb.value);
+      if (selectedChipsets.length) filtered = filtered.filter(p => selectedChipsets.includes(p.chipset_manufacturer));
+      const selectedSockets = Array.from(document.querySelectorAll('.filter-socket:checked')).map(cb => cb.value);
+      if (selectedSockets.length) filtered = filtered.filter(p => selectedSockets.includes(p.socket));
+      const selectedMbChipsets = Array.from(document.querySelectorAll('.filter-mb-chipset:checked')).map(cb => cb.value);
+      if (selectedMbChipsets.length) filtered = filtered.filter(p => selectedMbChipsets.includes(p.chipset));
+      const selectedTypes = Array.from(document.querySelectorAll('.filter-type:checked')).map(cb => cb.value);
+      if (selectedTypes.length) filtered = filtered.filter(p => selectedTypes.includes(p.ram_type || p.type || p.storage_type));
+      const selectedFormFactors = Array.from(document.querySelectorAll('.filter-formfactor:checked')).map(cb => cb.value);
+      if (selectedFormFactors.length) filtered = filtered.filter(p => selectedFormFactors.includes(p.form_factor));
+      const selectedMemory = Array.from(document.querySelectorAll('.filter-memory:checked')).map(cb => parseInt(cb.value));
+      if (selectedMemory.length) filtered = filtered.filter(p => selectedMemory.includes(p.memory));
+      const selectedCores = Array.from(document.querySelectorAll('.filter-cores:checked')).map(cb => parseInt(cb.value));
+      if (selectedCores.length) filtered = filtered.filter(p => selectedCores.includes(p.cores?.total || p.cores));
+      const selectedCapacity = Array.from(document.querySelectorAll('.filter-capacity:checked')).map(cb => parseInt(cb.value));
+      if (selectedCapacity.length) filtered = filtered.filter(p => selectedCapacity.includes(p.capacity || (p.modules?.capacity_gb ? p.modules.quantity * p.modules.capacity_gb : null)));
+      const selectedSpeed = Array.from(document.querySelectorAll('.filter-speed:checked')).map(cb => parseInt(cb.value));
+      if (selectedSpeed.length) filtered = filtered.filter(p => selectedSpeed.includes(p.speed));
+      const selectedWattage = Array.from(document.querySelectorAll('.filter-wattage:checked')).map(cb => parseInt(cb.value));
+      if (selectedWattage.length) filtered = filtered.filter(p => selectedWattage.includes(p.wattage));
+      const selectedEfficiency = Array.from(document.querySelectorAll('.filter-efficiency:checked')).map(cb => cb.value);
+      if (selectedEfficiency.length) filtered = filtered.filter(p => selectedEfficiency.includes(p.efficiency_rating));
+      const selectedModular = Array.from(document.querySelectorAll('.filter-modular:checked')).map(cb => cb.value);
+      if (selectedModular.length) filtered = filtered.filter(p => selectedModular.includes(p.modular));
+      const selectedColors = Array.from(document.querySelectorAll('.filter-color:checked')).map(cb => cb.value);
+      if (selectedColors.length) filtered = filtered.filter(p => selectedColors.includes(p.color?.[0]));
+      const selectedSidePanels = Array.from(document.querySelectorAll('.filter-side-panel:checked')).map(cb => cb.value);
+      if (selectedSidePanels.length) filtered = filtered.filter(p => selectedSidePanels.includes(p.side_panel));
+      
+      filteredProducts = filtered;
+      currentPage = 1;
+      updatePagination();
+      saveCategoryState();
+    }
+
+    function handleCatalogSearch(e) {
+      if (searchTimeout) clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        updateSearchAndFilter();
+      }, 300);
+    }
 
     // ==================== СОХРАНЕНИЕ СОСТОЯНИЯ ====================
     function saveCategoryState() {
       localStorage.setItem('iron_last_category', currentCategory);
       localStorage.setItem('iron_last_page', currentPage);
       localStorage.setItem('iron_scroll_position', window.scrollY);
+      localStorage.setItem('iron_search_query', searchQuery);
     }
 
     function restoreCategoryState() {
       const savedCategory = localStorage.getItem('iron_last_category');
       const savedPage = parseInt(localStorage.getItem('iron_last_page')) || 1;
       const savedScroll = parseInt(localStorage.getItem('iron_scroll_position')) || 0;
+      const savedSearch = localStorage.getItem('iron_search_query') || '';
       if (savedCategory && CATEGORIES[savedCategory]) {
-        return { category: savedCategory, page: savedPage, scroll: savedScroll };
+        return { category: savedCategory, page: savedPage, scroll: savedScroll, search: savedSearch };
       }
-      return { category: 'gpu', page: 1, scroll: 0 };
+      return { category: 'gpu', page: 1, scroll: 0, search: '' };
     }
 
     function getCategoryFromURL() {
@@ -621,7 +807,7 @@
       }
     }
 
-    // ==================== ФИЛЬТРЫ ====================
+    // ==================== ФИЛЬТРЫ UI ====================
     function createFilterGroup(title, items, filterClass) {
       if (!items || items.length === 0) return '';
       const sortedItems = [...items].sort((a, b) => {
@@ -650,20 +836,10 @@
       if (!config) return;
       const filterConfig = config.getFilterConfig();
       const filterValues = {
-        manufacturers: new Set(),
-        chipsets: new Set(),
-        sockets: new Set(),
-        types: new Set(),
-        form_factors: new Set(),
-        memory: new Set(),
-        cores: new Set(),
-        capacity: new Set(),
-        speed: new Set(),
-        wattage: new Set(),
-        efficiency: new Set(),
-        modular: new Set(),
-        colors: new Set(),
-        side_panels: new Set()
+        manufacturers: new Set(), chipsets: new Set(), sockets: new Set(), types: new Set(),
+        form_factors: new Set(), memory: new Set(), cores: new Set(), capacity: new Set(),
+        speed: new Set(), wattage: new Set(), efficiency: new Set(), modular: new Set(),
+        colors: new Set(), side_panels: new Set()
       };
       products.forEach(p => {
         const vals = config.getFilterValues(p);
@@ -683,51 +859,21 @@
         if (vals.side_panel) filterValues.side_panels.add(vals.side_panel);
       });
       let html = '';
-      if (filterConfig.manufacturers && filterValues.manufacturers.size > 0) {
-        html += createFilterGroup('Производитель', filterValues.manufacturers, 'filter-manufacturer');
-      }
-      if (filterConfig.chipsets && filterValues.chipsets.size > 0 && currentCategory !== 'motherboard') {
-        html += createFilterGroup('Производитель чипсета', filterValues.chipsets, 'filter-chipset');
-      }
-      if (filterConfig.sockets && filterValues.sockets.size > 0) {
-        html += createFilterGroup('Сокет', filterValues.sockets, 'filter-socket');
-      }
-      if (filterConfig.chipsets && filterValues.chipsets.size > 0 && currentCategory === 'motherboard') {
-        html += createFilterGroup('Чипсет', filterValues.chipsets, 'filter-mb-chipset');
-      }
-      if (filterConfig.types && filterValues.types.size > 0) {
-        html += createFilterGroup('Тип памяти', filterValues.types, 'filter-type');
-      }
-      if (filterConfig.form_factors && filterValues.form_factors.size > 0) {
-        html += createFilterGroup('Форм-фактор', filterValues.form_factors, 'filter-formfactor');
-      }
-      if (filterConfig.memory && filterConfig.memory.options) {
-        html += createFilterGroup('Объём памяти (GB)', filterConfig.memory.options, 'filter-memory');
-      }
-      if (filterConfig.cores && filterConfig.cores.options) {
-        html += createFilterGroup('Количество ядер', filterConfig.cores.options, 'filter-cores');
-      }
-      if (filterConfig.capacity && filterConfig.capacity.options) {
-        html += createFilterGroup('Объём (GB)', filterConfig.capacity.options, 'filter-capacity');
-      }
-      if (filterConfig.speed && filterConfig.speed.options) {
-        html += createFilterGroup('Частота (MHz)', filterConfig.speed.options, 'filter-speed');
-      }
-      if (filterConfig.wattage && filterConfig.wattage.options) {
-        html += createFilterGroup('Мощность (W)', filterConfig.wattage.options, 'filter-wattage');
-      }
-      if (filterConfig.efficiency && filterConfig.efficiency.options) {
-        html += createFilterGroup('Сертификат', filterConfig.efficiency.options, 'filter-efficiency');
-      }
-      if (filterConfig.modular && filterConfig.modular.options) {
-        html += createFilterGroup('Модульность', filterConfig.modular.options, 'filter-modular');
-      }
-      if (filterConfig.colors && filterConfig.colors.options) {
-        html += createFilterGroup('Цвет', filterConfig.colors.options, 'filter-color');
-      }
-      if (filterConfig.side_panel && filterConfig.side_panel.options) {
-        html += createFilterGroup('Боковая панель', filterConfig.side_panel.options, 'filter-side-panel');
-      }
+      if (filterConfig.manufacturers && filterValues.manufacturers.size > 0) html += createFilterGroup('Производитель', filterValues.manufacturers, 'filter-manufacturer');
+      if (filterConfig.chipsets && filterValues.chipsets.size > 0 && currentCategory !== 'motherboard') html += createFilterGroup('Производитель чипсета', filterValues.chipsets, 'filter-chipset');
+      if (filterConfig.sockets && filterValues.sockets.size > 0) html += createFilterGroup('Сокет', filterValues.sockets, 'filter-socket');
+      if (filterConfig.chipsets && filterValues.chipsets.size > 0 && currentCategory === 'motherboard') html += createFilterGroup('Чипсет', filterValues.chipsets, 'filter-mb-chipset');
+      if (filterConfig.types && filterValues.types.size > 0) html += createFilterGroup('Тип памяти', filterValues.types, 'filter-type');
+      if (filterConfig.form_factors && filterValues.form_factors.size > 0) html += createFilterGroup('Форм-фактор', filterValues.form_factors, 'filter-formfactor');
+      if (filterConfig.memory && filterConfig.memory.options) html += createFilterGroup('Объём памяти (GB)', filterConfig.memory.options, 'filter-memory');
+      if (filterConfig.cores && filterConfig.cores.options) html += createFilterGroup('Количество ядер', filterConfig.cores.options, 'filter-cores');
+      if (filterConfig.capacity && filterConfig.capacity.options) html += createFilterGroup('Объём (GB)', filterConfig.capacity.options, 'filter-capacity');
+      if (filterConfig.speed && filterConfig.speed.options) html += createFilterGroup('Частота (MHz)', filterConfig.speed.options, 'filter-speed');
+      if (filterConfig.wattage && filterConfig.wattage.options) html += createFilterGroup('Мощность (W)', filterConfig.wattage.options, 'filter-wattage');
+      if (filterConfig.efficiency && filterConfig.efficiency.options) html += createFilterGroup('Сертификат', filterConfig.efficiency.options, 'filter-efficiency');
+      if (filterConfig.modular && filterConfig.modular.options) html += createFilterGroup('Модульность', filterConfig.modular.options, 'filter-modular');
+      if (filterConfig.colors && filterConfig.colors.options) html += createFilterGroup('Цвет', filterConfig.colors.options, 'filter-color');
+      if (filterConfig.side_panel && filterConfig.side_panel.options) html += createFilterGroup('Боковая панель', filterConfig.side_panel.options, 'filter-side-panel');
       document.getElementById('dynamic-filters').innerHTML = html || '<div class="filter-group"><div class="not-available">Нет доступных фильтров</div></div>';
       attachFilterListeners();
     }
@@ -757,8 +903,7 @@
     }
 
     function onFilterChange() {
-      currentPage = 1;
-      filterAndSort();
+      updateSearchAndFilter();
     }
 
     function escapeHtml(text) {
@@ -773,7 +918,7 @@
       return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
     }
 
-    // ==================== ОТОБРАЖЕНИЕ ТОВАРОВ ====================
+    // ==================== ОТОБРАЖЕНИЕ ====================
     function renderProducts() {
       const grid = document.getElementById('products-grid');
       const start = (currentPage - 1) * itemsPerPage;
@@ -811,6 +956,9 @@
       const config = CATEGORIES[currentCategory];
       if (!filteredProducts.length) info.textContent = `Найдено: 0 ${config.name.toLowerCase()}`;
       else info.textContent = `Показано ${(currentPage-1)*itemsPerPage+1}-${Math.min(currentPage*itemsPerPage, filteredProducts.length)} из ${filteredProducts.length} ${config.name.toLowerCase()}`;
+      if (searchQuery && searchQuery.trim() !== '') {
+        info.textContent += ` (поиск: "${escapeHtml(searchQuery)}")`;
+      }
     }
 
     function renderPagination() {
@@ -839,55 +987,17 @@
       renderProducts();
     }
 
-    // ==================== ФИЛЬТРАЦИЯ ====================
-    function filterAndSort() {
-      let filtered = [...allProducts];
-      const config = CATEGORIES[currentCategory];
-      const selectedManufacturers = Array.from(document.querySelectorAll('.filter-manufacturer:checked')).map(cb => cb.value);
-      if (selectedManufacturers.length) filtered = filtered.filter(p => selectedManufacturers.includes(config.getManufacturer(p)));
-      const selectedChipsets = Array.from(document.querySelectorAll('.filter-chipset:checked')).map(cb => cb.value);
-      if (selectedChipsets.length) filtered = filtered.filter(p => selectedChipsets.includes(p.chipset_manufacturer));
-      const selectedSockets = Array.from(document.querySelectorAll('.filter-socket:checked')).map(cb => cb.value);
-      if (selectedSockets.length) filtered = filtered.filter(p => selectedSockets.includes(p.socket));
-      const selectedMbChipsets = Array.from(document.querySelectorAll('.filter-mb-chipset:checked')).map(cb => cb.value);
-      if (selectedMbChipsets.length) filtered = filtered.filter(p => selectedMbChipsets.includes(p.chipset));
-      const selectedTypes = Array.from(document.querySelectorAll('.filter-type:checked')).map(cb => cb.value);
-      if (selectedTypes.length) filtered = filtered.filter(p => selectedTypes.includes(p.ram_type || p.type || p.storage_type));
-      const selectedFormFactors = Array.from(document.querySelectorAll('.filter-formfactor:checked')).map(cb => cb.value);
-      if (selectedFormFactors.length) filtered = filtered.filter(p => selectedFormFactors.includes(p.form_factor));
-      const selectedMemory = Array.from(document.querySelectorAll('.filter-memory:checked')).map(cb => parseInt(cb.value));
-      if (selectedMemory.length) filtered = filtered.filter(p => selectedMemory.includes(p.memory));
-      const selectedCores = Array.from(document.querySelectorAll('.filter-cores:checked')).map(cb => parseInt(cb.value));
-      if (selectedCores.length) filtered = filtered.filter(p => selectedCores.includes(p.cores?.total || p.cores));
-      const selectedCapacity = Array.from(document.querySelectorAll('.filter-capacity:checked')).map(cb => parseInt(cb.value));
-      if (selectedCapacity.length) filtered = filtered.filter(p => selectedCapacity.includes(p.capacity || (p.modules?.capacity_gb ? p.modules.quantity * p.modules.capacity_gb : null)));
-      const selectedSpeed = Array.from(document.querySelectorAll('.filter-speed:checked')).map(cb => parseInt(cb.value));
-      if (selectedSpeed.length) filtered = filtered.filter(p => selectedSpeed.includes(p.speed));
-      const selectedWattage = Array.from(document.querySelectorAll('.filter-wattage:checked')).map(cb => parseInt(cb.value));
-      if (selectedWattage.length) filtered = filtered.filter(p => selectedWattage.includes(p.wattage));
-      const selectedEfficiency = Array.from(document.querySelectorAll('.filter-efficiency:checked')).map(cb => cb.value);
-      if (selectedEfficiency.length) filtered = filtered.filter(p => selectedEfficiency.includes(p.efficiency_rating));
-      const selectedModular = Array.from(document.querySelectorAll('.filter-modular:checked')).map(cb => cb.value);
-      if (selectedModular.length) filtered = filtered.filter(p => selectedModular.includes(p.modular));
-      const selectedColors = Array.from(document.querySelectorAll('.filter-color:checked')).map(cb => cb.value);
-      if (selectedColors.length) filtered = filtered.filter(p => selectedColors.includes(p.color?.[0]));
-      const selectedSidePanels = Array.from(document.querySelectorAll('.filter-side-panel:checked')).map(cb => cb.value);
-      if (selectedSidePanels.length) filtered = filtered.filter(p => selectedSidePanels.includes(p.side_panel));
-      filteredProducts = filtered;
-      updatePagination();
-      saveCategoryState();
-    }
-
     function resetFilters() {
       const selectors = '.filter-manufacturer, .filter-chipset, .filter-socket, .filter-mb-chipset, .filter-type, .filter-formfactor, .filter-memory, .filter-cores, .filter-capacity, .filter-speed, .filter-wattage, .filter-efficiency, .filter-modular, .filter-color, .filter-side-panel';
       document.querySelectorAll(selectors).forEach(cb => cb.checked = false);
       document.getElementById('per-page').value = '24';
       itemsPerPage = 24;
-      currentPage = 1;
-      filterAndSort();
+      const searchInputField = document.getElementById('catalog-search-input');
+      if (searchInputField) searchInputField.value = '';
+      searchQuery = '';
+      updateSearchAndFilter();
     }
 
-    // ==================== ПЕРЕКЛЮЧЕНИЕ КАТЕГОРИЙ ====================
     async function switchCategory(category) {
       if (category === currentCategory) return;
       currentCategory = category;
@@ -900,7 +1010,10 @@
       document.getElementById('products-grid').innerHTML = '<div class="no-results">Загрузка данных...</div>';
       allProducts = await loadCategory(category);
       updateDynamicFilters(allProducts);
-      filterAndSort();
+      const searchInputField = document.getElementById('catalog-search-input');
+      if (searchInputField) searchInputField.value = '';
+      searchQuery = '';
+      updateSearchAndFilter();
       saveCategoryState();
     }
 
@@ -908,7 +1021,7 @@
       document.querySelectorAll('input[name="category"]').forEach(radio => {
         radio.addEventListener('change', (e) => { if (e.target.checked) switchCategory(e.target.value); });
       });
-      document.getElementById('per-page')?.addEventListener('change', (e) => { itemsPerPage = parseInt(e.target.value); currentPage = 1; filterAndSort(); });
+      document.getElementById('per-page')?.addEventListener('change', (e) => { itemsPerPage = parseInt(e.target.value); currentPage = 1; updateSearchAndFilter(); });
       document.getElementById('reset-filters')?.addEventListener('click', resetFilters);
     }
 
@@ -927,16 +1040,22 @@
       else if (savedState.category) targetCategory = savedState.category;
       currentCategory = targetCategory;
       currentPage = savedState.page;
+      searchQuery = savedState.search;
       const radio = document.getElementById(`cat-${targetCategory}`);
       if (radio) radio.checked = true;
       allProducts = await loadCategory(currentCategory);
       updateDynamicFilters(allProducts);
       attachCategoryListeners();
-      filterAndSort();
+      const searchInputField = document.getElementById('catalog-search-input');
+      if (searchInputField && searchQuery) {
+        searchInputField.value = searchQuery;
+      }
+      updateSearchAndFilter();
       if (savedState.scroll > 0) setTimeout(() => window.scrollTo({ top: savedState.scroll, behavior: 'instant' }), 100);
       updateCompareBar();
-      
-      // Проверяем подсветку кнопки
+      if (searchInputField) {
+        searchInputField.addEventListener('input', handleCatalogSearch);
+      }
       checkHighlight();
     });
   </script>
