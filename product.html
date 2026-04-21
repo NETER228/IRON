@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/fav.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IRON — Детальная информация</title>
+  <link rel="stylesheet" href="main.css">
+  <style>
+    /* Динамические контейнеры - адаптируются под содержимое */
+    .product-detail-container {
+      max-width: 1400px;
+      margin: 100px auto 2rem;
+      padding: 2rem;
+    }
+
+    .product-detail-card {
+      background: var(--bg-secondary);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: 1.5rem;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .product-detail-content {
+      padding: 2rem;
+    }
+
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .specs-section {
+      background: var(--bg-surface);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      transition: all 0.3s;
+      height: auto;
+      min-height: fit-content;
+    }
+
+    .specs-section:hover {
+      box-shadow: 0 0 15px var(--shadow-color);
+    }
+
+    .specs-section h3 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--accent-cyan);
+      display: inline-block;
+    }
+
+    .specs-table {
+      width: 100%;
+    }
+
+    .specs-row {
+      display: flex;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    .specs-label {
+      width: 40%;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .specs-value {
+      width: 60%;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      word-break: break-word;
+    }
+
+    /* Центрирование строки с охлаждением */
+    .specs-row:has(.fan-icon) .specs-value {
+      text-align: center;
+    }
+
+    /* Иконки - центрирование контейнеров */
+    .power-icons, .fan-icons, .video-icons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+
+    .power-icon {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      transition: all 0.3s;
+      min-width: 85px;
+      flex: 0 0 auto;
+    }
+
+    /* Центрирование изображений внутри контейнера */
+    .power-icon img,
+    .fan-icon img,
+    .video-icon img {
+      display: block;
+      margin: 0 auto;
+      object-fit: contain;
+    }
+
+    /* Разные размеры для разных иконок */
+    .power-icon[data-type="1x8"] img {
+      width: 119px;
+      height: 97px;
+    }
+    
+    .power-icon[data-type="2x8"] img {
+      width: 230px;
+      height: 97px;
+    }
+    
+    .power-icon[data-type="3x8"] img {
+      width: 300px;
+      height: 93px;
+    }
+    
+    .power-icon[data-type="6pin"] img {
+      width: 128px;
+      height: 97px;
+    }
+    
+    .power-icon[data-type="12v"] img {
+      width: 170px;
+      height: 110px;
+    }
+
+    .power-icon:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 5px 15px var(--shadow-color);
+    }
+
+    .power-icon span {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .fan-icon {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      transition: all 0.3s;
+      margin: 0 auto;
+    }
+
+    .fan-icon img {
+      width: 150px;
+      height: 56px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .fan-icon:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 5px 15px var(--shadow-color);
+    }
+
+    .fan-icon span {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .video-icon {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      transition: all 0.3s;
+      min-width: 85px;
+      flex: 0 0 auto;
+    }
+
+    .video-icon img {
+      width: 190px;
+      height: 80px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .video-icon:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 5px 15px var(--shadow-color);
+    }
+
+    .video-icon span {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Бейджи */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.7rem;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      margin: 0.2rem;
+    }
+
+    .badge-blue {
+      background: rgba(103, 232, 249, 0.15);
+      color: var(--accent-cyan);
+    }
+
+    .badge-gray {
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    /* Кнопки магазинов */
+    .product-links {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .product-links h3 {
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .links-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .product-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 1.2rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.6rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .product-link:hover {
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+      background: var(--bg-surface);
+    }
+
+    .not-available {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 0.5rem 0;
+      font-size: 0.85rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+      .product-detail-container {
+        padding: 1rem;
+        margin-top: 80px;
+      }
+      .specs-grid {
+        grid-template-columns: 1fr;
+      }
+      .specs-row {
+        flex-direction: column;
+      }
+      .specs-label, .specs-value {
+        width: 100%;
+      }
+      .specs-label {
+        margin-bottom: 0.2rem;
+      }
+      .power-icon[data-type="2x8"] img {
+        width: 56px;
+        height: 56px;
+      }
+      .power-icon[data-type="3x8"] img {
+        width: 70px;
+        height: 70px;
+      }
+      .fan-icon img, .video-icon img {
+        width: 40px;
+        height: 40px;
+      }
+      .power-icon, .fan-icon, .video-icon {
+        min-width: 70px;
+        padding: 0.5rem;
+      }
+      .product-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .power-icons, .fan-icons, .video-icons {
+        gap: 0.5rem;
+      }
+      .power-icon[data-type="2x8"] img {
+        width: 48px;
+        height: 48px;
+      }
+      .power-icon[data-type="3x8"] img {
+        width: 60px;
+        height: 60px;
+      }
+      .power-icon, .fan-icon, .video-icon {
+        min-width: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header-container"></div>
+  <canvas id="canvas" class="hero-bg"></canvas>
+
+  <div class="product-detail-container" id="product-detail-container">
+    <a href="catalog.html" class="back-button">← Назад в каталог</a>
+    <div id="product-content" class="loading">Загрузка данных...</div>
+  </div>
+
+  <div id="footer-container"></div>
+
+  <script src="components.js"></script>
+  <script src="particles.js"></script>
+
+  <script>
+    const SUPABASE_URL = 'https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/';
+    
+    // Конфигурация категорий
+    const CATEGORIES = {
+      gpu: {
+        name: 'Видеокарта',
+        file: 'all GPU.json',
+        dataKey: 'gpus',
+        render: (product) => renderGPU(product)
+      },
+      cpu: {
+        name: 'Процессор',
+        file: 'all CPU.json',
+        dataKey: 'cpus',
+        render: (product) => renderCPU(product)
+      },
+      motherboard: {
+        name: 'Материнская плата',
+        file: 'all Motherboard.json',
+        dataKey: 'motherboards',
+        render: (product) => renderMotherboard(product)
+      },
+      ram: {
+        name: 'Оперативная память',
+        file: 'all RAM.json',
+        dataKey: 'rams',
+        render: (product) => renderRAM(product)
+      },
+      storage: {
+        name: 'SSD накопитель',
+        file: 'all Storage.json',
+        dataKey: 'storages',
+        render: (product) => renderStorage(product)
+      },
+      psu: {
+        name: 'Блок питания',
+        file: 'all PSU.json',
+        dataKey: 'psus',
+        render: (product) => renderPSU(product)
+      },
+      case: {
+        name: 'Корпус',
+        file: 'all Case.json',
+        dataKey: 'cases',
+        render: (product) => renderCase(product)
+      }
+    };
+
+    function getCategoryAndIdFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return { category: params.get('category') || 'gpu', id: params.get('id') };
+    }
+
+    async function loadProduct(category, productId) {
+      const config = CATEGORIES[category];
+      if (!config) return null;
+      
+      try {
+        const response = await fetch(config.file);
+        if (!response.ok) throw new Error(`Не удалось загрузить ${config.file}`);
+        const data = await response.json();
+        const products = data[config.dataKey] || (Array.isArray(data) ? data : []);
+        return products.find(p => p.opendb_id === productId);
+      } catch (error) {
+        console.error('Ошибка загрузки:', error);
+        return null;
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text && text !== 0) return 'Не указано';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ==================== ИКОНКИ ====================
+    
+    function getPowerIconUrl(pinCount, connectorType = null) {
+      if (connectorType === '12v2x6') return `${SUPABASE_URL}12v6.jpg`;
+      if (connectorType === '12vhpwr') return `${SUPABASE_URL}12vhpwr.jpg`;
+      if (pinCount === 1) return `${SUPABASE_URL}1 x 8 pin.jpg`;
+      if (pinCount === 2) return `${SUPABASE_URL}2 x 8 pin.jpg`;
+      if (pinCount === 3) return `${SUPABASE_URL}3 x 8 pin.jpg`;
+      return null;
+    }
+    
+    function getSixPinIconUrl() {
+      return `${SUPABASE_URL}1 x 6 pin.jpg`;
+    }
+    
+    function getFanIconUrl(fanCount) {
+      let count = 0;
+      if (typeof fanCount === 'string') {
+        const match = fanCount.match(/(\d+)/);
+        if (match) count = parseInt(match[0]);
+      } else if (typeof fanCount === 'number') {
+        count = fanCount;
+      }
+      
+      if (count === 1) return `${SUPABASE_URL}1 fans gpu.jpg`;
+      if (count === 2) return `${SUPABASE_URL}2 fans gpu.jpg`;
+      if (count === 3) return `${SUPABASE_URL}3 fans gpu.jpg`;
+      return null;
+    }
+    
+    function getVideoOutputIconUrl(outputType) {
+      const type = outputType.toLowerCase();
+      if (type.includes('hdmi')) return `${SUPABASE_URL}hdmi.png`;
+      if (type.includes('displayport')) return `${SUPABASE_URL}dp.png`;
+      if (type.includes('vga')) return `${SUPABASE_URL}vga.png`;
+      if (type.includes('dvi')) return `${SUPABASE_URL}dvi.png`;
+      return null;
+    }
+
+    function renderPowerConnectors(connectors) {
+      if (!connectors) return '<div class="not-available">Нет данных</div>';
+      let html = '<div class="power-icons">';
+      
+      const eightPin = connectors['pcie_8_pin'] || 0;
+      if (eightPin > 0) {
+        const iconUrl = getPowerIconUrl(eightPin > 3 ? 3 : eightPin);
+        if (iconUrl) {
+          let dataType = '1x8';
+          if (eightPin === 2) dataType = '2x8';
+          if (eightPin === 3) dataType = '3x8';
+          html += `<div class="power-icon" data-type="${dataType}"><img src="${iconUrl}" alt="${eightPin}×8-pin" loading="lazy" onerror="this.style.display='none'"><span>${eightPin}× 8-pin PCIe</span></div>`;
+        }
+      }
+      
+      const sixPin = connectors['pcie_6_pin'] || 0;
+      if (sixPin > 0) {
+        const iconUrl = getSixPinIconUrl();
+        html += `<div class="power-icon" data-type="6pin"><img src="${iconUrl}" alt="${sixPin}×6-pin" loading="lazy" onerror="this.style.display='none'"><span>${sixPin}× 6-pin PCIe</span></div>`;
+      }
+      
+      const new12v = connectors['pcie_12V_2x6'] || 0;
+      if (new12v > 0) {
+        const iconUrl = getPowerIconUrl(null, '12v2x6');
+        if (iconUrl) {
+          html += `<div class="power-icon" data-type="12v"><img src="${iconUrl}" alt="${new12v}×12V-2x6" loading="lazy" onerror="this.style.display='none'"><span>${new12v}× 12V-2x6</span></div>`;
+        }
+      }
+      
+      const hpwr = connectors['pcie_12VHPWR'] || 0;
+      if (hpwr > 0) {
+        const iconUrl = getPowerIconUrl(null, '12vhpwr');
+        if (iconUrl) {
+          html += `<div class="power-icon" data-type="12v"><img src="${iconUrl}" alt="${hpwr}×12VHPWR" loading="lazy" onerror="this.style.display='none'"><span>${hpwr}× 12VHPWR</span></div>`;
+        }
+      }
+      
+      html += '</div>';
+      return html || '<div class="not-available">Нет данных</div>';
+    }
+
+    function renderCooling(cooling) {
+      if (!cooling) return '<div class="not-available">Нет данных</div>';
+      const fanIconUrl = getFanIconUrl(cooling);
+      if (fanIconUrl) {
+        return `<div class="fan-icon"><img src="${fanIconUrl}" alt="${cooling}" loading="lazy" onerror="this.style.display='none'"><span>${cooling}</span></div>`;
+      }
+      return `<span>${cooling}</span>`;
+    }
+
+    function renderVideoOutputs(outputs) {
+      if (!outputs) return '<div class="not-available">Нет данных</div>';
+      let html = '<div class="video-icons">';
+      const types = [
+        { key: 'hdmi_2_1', name: 'HDMI 2.1', type: 'hdmi' },
+        { key: 'hdmi_2_0', name: 'HDMI 2.0', type: 'hdmi' },
+        { key: 'displayport_2_1', name: 'DisplayPort 2.1', type: 'displayport' },
+        { key: 'displayport_1_4a', name: 'DisplayPort 1.4a', type: 'displayport' },
+        { key: 'vga', name: 'VGA', type: 'vga' },
+        { key: 'dvi_d', name: 'DVI-D', type: 'dvi' }
+      ];
+      for (const t of types) {
+        if (outputs[t.key] > 0) {
+          const iconUrl = getVideoOutputIconUrl(t.type);
+          if (iconUrl) {
+            html += `<div class="video-icon"><img src="${iconUrl}" alt="${t.name}" loading="lazy" onerror="this.style.display='none'"><span>${outputs[t.key]}× ${t.name}</span></div>`;
+          }
+        }
+      }
+      html += '</div>';
+      return html || '<div class="not-available">Нет данных</div>';
+    }
+
+    function renderMetadata(metadata) {
+      if (!metadata) return '';
+      let html = '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">';
+      if (metadata.series) html += `<div class="badge badge-blue">${escapeHtml(metadata.series)}</div>`;
+      if (metadata.variant) html += `<div class="badge badge-gray">${escapeHtml(metadata.variant)}</div>`;
+      if (metadata.releaseYear) html += `<div class="badge badge-gray">Год: ${metadata.releaseYear}</div>`;
+      if (metadata.manufacturer_color) html += `<div class="badge badge-gray">Цвет: ${metadata.manufacturer_color}</div>`;
+      if (metadata.part_numbers?.length) {
+        html += `<div style="margin-top:0.5rem;width:100%;"><strong>Артикулы:</strong><br>${metadata.part_numbers.map(pn => `<span class="badge badge-gray">${escapeHtml(pn)}</span>`).join('')}</div>`;
+      }
+      html += '</div>';
+      return html;
+    }
+
+    // ==================== РЕНДЕР GPU ====================
+    function renderGPU(product) {
+      const name = product.metadata?.name || product.name || product.chipset || 'Без названия';
+      const manufacturer = product.metadata?.manufacturer || product.manufacturer || product.chipset_manufacturer;
+      
+      return `
+        <div class="product-detail-card">
+          <div class="product-detail-header"><h1>${escapeHtml(name)}</h1><div class="manufacturer">${escapeHtml(manufacturer)}</div></div>
+          <div class="product-detail-content">
+            <div class="specs-grid">
+              <div class="specs-section"><h3>Основные характеристики</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Чипсет<\/td><td class="specs-value">${escapeHtml(product.chipset)}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Производитель чипсета<\/td><td class="specs-value">${escapeHtml(product.chipset_manufacturer)}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Объём памяти<\/td><td class="specs-value">${product.memory} GB ${product.memory_type || ''}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Шина памяти<\/td><td class="specs-value">${product.memory_bus ? product.memory_bus + '-bit' : 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Базовая частота<\/td><td class="specs-value">${product.core_base_clock ? product.core_base_clock + ' MHz' : 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Boost частота<\/td><td class="specs-value">${product.core_boost_clock ? product.core_boost_clock + ' MHz' : 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Количество ядер<\/td><td class="specs-value">${product.core_count ? product.core_count.toLocaleString() : 'Не указано'}<\/td><\/tr>
+                <\/table>
+              <\/div>
+              <div class="specs-section"><h3>Физические характеристики</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">TDP<\/td><td class="specs-value">${product.tdp ? product.tdp + ' W' : 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Длина<\/td><td class="specs-value">${product.length ? product.length + ' mm' : 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Слоты<\/td><td class="specs-value">${product.total_slot_width || product.case_expansion_slot_width || 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Охлаждение<\/td><td class="specs-value">${renderCooling(product.cooling)}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Интерфейс<\/td><td class="specs-value">${product.interface || 'PCIe x16'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Цвета<\/td><td class="specs-value">${product.color?.length ? product.color.join(', ') : 'Не указано'}<\/td><\/tr>
+                <\/table>
+              <\/div>
+              <div class="specs-section"><h3>Разъёмы питания</h3>${renderPowerConnectors(product.power_connectors)}<\/div>
+              <div class="specs-section"><h3>Видеовыходы</h3>${renderVideoOutputs(product.video_outputs)}<\/div>
+              ${product.metadata ? `<div class="specs-section"><h3>Дополнительная информация</h3>${renderMetadata(product.metadata)}<\/div>` : ''}
+            <\/div>
+            ${renderProductLinks(product.general_product_information, name)}
+          <\/div>
+        <\/div>
+      `;
+    }
+
+    // ==================== РЕНДЕР CPU ====================
+    function renderCPU(product) {
+      const name = product.metadata?.name || product.name || `${product.series} ${product.microarchitecture}`;
+      const manufacturer = product.metadata?.manufacturer || product.manufacturer || 'Intel/AMD';
+      
+      return `
+        <div class="product-detail-card">
+          <div class="product-detail-header"><h1>${escapeHtml(name)}</h1><div class="manufacturer">${escapeHtml(manufacturer)}</div></div>
+          <div class="product-detail-content">
+            <div class="specs-grid">
+              <div class="specs-section"><h3>Основные характеристики</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Серия<\/td><td class="specs-value">${escapeHtml(product.series || 'Не указано')}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Микроархитектура<\/td><td class="specs-value">${escapeHtml(product.microarchitecture || 'Не указано')}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Сокет<\/td><td class="specs-value">${escapeHtml(product.socket || 'Не указано')}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Ядра / Потоки<\/td><td class="specs-value">${product.cores?.total || product.cores || '?'} / ${product.cores?.threads || '?'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Базовая частота<\/td><td class="specs-value">${product.clocks?.performance?.base || '?'} GHz<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Boost частота<\/td><td class="specs-value">${product.clocks?.performance?.boost || '?'} GHz<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Кэш L2/L3<\/td><td class="specs-value">${product.cache?.l2 || '?'} MB / ${product.cache?.l3 || '?'} MB<\/td><\/tr>
+                <\/table>
+              <\/div>
+              <div class="specs-section"><h3>Технологии</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">TDP<\/td><td class="specs-value">${product.specifications?.tdp || product.tdp || '?'} W<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Техпроцесс<\/td><td class="specs-value">${product.specifications?.lithography || 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">ECC поддержка<\/td><td class="specs-value">${product.specifications?.eccSupport ? 'Да' : 'Нет'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Встроенная графика<\/td><td class="specs-value">${product.specifications?.integratedGraphics?.model || 'Нет'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Макс. память<\/td><td class="specs-value">${product.specifications?.memory?.maxSupport || '?'} GB<\/td><\/tr>
+                <\/table>
+              <\/div>
+              ${product.metadata ? `<div class="specs-section"><h3>Дополнительная информация</h3>${renderMetadata(product.metadata)}<\/div>` : ''}
+            <\/div>
+            ${renderProductLinks(product.general_product_information, name)}
+          <\/div>
+        <\/div>
+      `;
+    }
+
+    // ==================== РЕНДЕР МАТЕРИНСКОЙ ПЛАТЫ ====================
+    function renderMotherboard(product) {
+      const name = product.metadata?.name || product.name;
+      const manufacturer = product.metadata?.manufacturer || product.manufacturer;
+      
+      return `
+        <div class="product-detail-card">
+          <div class="product-detail-header"><h1>${escapeHtml(name)}</h1><div class="manufacturer">${escapeHtml(manufacturer)}</div></div>
+          <div class="product-detail-content">
+            <div class="specs-grid">
+              <div class="specs-section"><h3>Основные характеристики</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Сокет<\/td><td class="specs-value">${escapeHtml(product.socket || 'Не указано')}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Чипсет<\/td><td class="specs-value">${escapeHtml(product.chipset || 'Не указано')}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Форм-фактор<\/td><td class="specs-value">${escapeHtml(product.form_factor || 'Не указано')}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Цвета<\/td><td class="specs-value">${product.color?.length ? product.color.join(', ') : 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Аудио чипсет<\/td><td class="specs-value">${product.audio?.chipset || 'Не указано'}<\/td><\/tr>
+                <\/table>
+              <\/div>
+              <div class="specs-section"><h3>Память и слоты</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Макс. память<\/td><td class="specs-value">${product.memory?.max || '?'} GB (${product.memory?.slots || '?'} слота)<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Тип памяти<\/td><td class="specs-value">${product.memory?.ram_type || 'DDR4/DDR5'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">PCIe слоты<\/td><td class="specs-value">${product.pcie_slots?.length || '?'} шт.<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">M.2 слоты<\/td><td class="specs-value">${product.m2_slots?.length || '?'} шт.<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">SATA порты<\/td><td class="specs-value">${product.storage_devices?.sata_6_gb_s || '?'} x SATA 6Gb/s<\/td><\/tr>
+                <\/table>
+              <\/div>
+              <div class="specs-section"><h3>Сеть и подключения</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Ethernet<\/td><td class="specs-value">${product.onboard_ethernet?.map(e => `${e.speed} (${e.controller})`).join(', ') || 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">USB заголовки<\/td><td class="specs-value">USB 2.0: ${product.usb_headers?.usb_2_0 || 0}, USB 3.2: ${product.usb_headers?.usb_3_2_gen_1 || 0}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">RAID поддержка<\/td><td class="specs-value">${product.raid_support ? 'Да' : 'Нет'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">ECC поддержка<\/td><td class="specs-value">${product.ecc_support ? 'Да' : 'Нет'}<\/td><\/tr>
+                <\/table>
+              <\/div>
+              ${product.metadata ? `<div class="specs-section"><h3>Дополнительная информация</h3>${renderMetadata(product.metadata)}<\/div>` : ''}
+            <\/div>
+            ${renderProductLinks(product.general_product_information, name)}
+          <\/div>
+        <\/div>
+      `;
+    }
+
+    // ==================== РЕНДЕР RAM ====================
+    function renderRAM(product) {
+      const name = product.metadata?.name || product.name || `${product.capacity}GB ${product.ram_type}`;
+      const manufacturer = product.metadata?.manufacturer || product.manufacturer;
+      const totalCapacity = product.modules?.capacity_gb ? product.modules.quantity * product.modules.capacity_gb : product.capacity;
+      
+      return `
+        <div class="product-detail-card">
+          <div class="product-detail-header"><h1>${escapeHtml(name)}</h1><div class="manufacturer">${escapeHtml(manufacturer)}</div></div>
+          <div class="product-detail-content">
+            <div class="specs-grid">
+              <div class="specs-section"><h3>Основные характеристики</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Общий объём<\/td><td class="specs-value">${totalCapacity} GB (${product.modules?.quantity || 1}×${product.modules?.capacity_gb || product.capacity} GB)<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Тип памяти<\/td><td class="specs-value">${product.ram_type || product.type || 'DDR4/DDR5'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Частота<\/td><td class="specs-value">${product.speed || '?'} MHz<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">CAS Latency<\/td><td class="specs-value">CL${product.cas_latency || '?'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Напряжение<\/td><td class="specs-value">${product.voltage ? product.voltage + 'V' : 'Не указано'}<\/td><\/tr>
+                <\/table>
+              <\/div>
+              <div class="specs-section"><h3>Физические характеристики</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Форм-фактор<\/td><td class="specs-value">${product.form_factor || 'DIMM'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">ECC<\/td><td class="specs-value">${product.ecc || 'Non-ECC'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Регистровая<\/td><td class="specs-value">${product.registered || 'Unbuffered'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Радиатор<\/td><td class="specs-value">${product.heat_spreader ? 'Да' : 'Нет'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">RGB подсветка<\/td><td class="specs-value">${product.rgb ? 'Да' : 'Нет'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Цвета<\/td><td class="specs-value">${product.color?.length ? product.color.join(', ') : 'Не указано'}<\/td><\/tr>
+                <\/table>
+              <\/div>
+              ${product.metadata ? `<div class="specs-section"><h3>Дополнительная информация</h3>${renderMetadata(product.metadata)}<\/div>` : ''}
+            <\/div>
+            ${renderProductLinks(product.general_product_information, name)}
+          <\/div>
+        <\/div>
+      `;
+    }
+
+    // ==================== РЕНДЕР STORAGE ====================
+    function renderStorage(product) {
+      const name = product.metadata?.name || product.name;
+      const manufacturer = product.metadata?.manufacturer || product.manufacturer;
+      
+      return `
+        <div class="product-detail-card">
+          <div class="product-detail-header"><h1>${escapeHtml(name)}</h1><div class="manufacturer">${escapeHtml(manufacturer)}</div></div>
+          <div class="product-detail-content">
+            <div class="specs-grid">
+              <div class="specs-section"><h3>Основные характеристики</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Объём<\/td><td class="specs-value">${product.capacity || '?'} GB<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Тип<\/td><td class="specs-value">${product.type || product.storage_type || 'SSD'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Форм-фактор<\/td><td class="specs-value">${product.form_factor || 'M.2'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Интерфейс<\/td><td class="specs-value">${product.interface || 'PCIe'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">NVMe<\/td><td class="specs-value">${product.nvme ? 'Да' : 'Нет'}<\/td><\/tr>
+                <\/table>
+              <\/div>
+              ${product.metadata ? `<div class="specs-section"><h3>Дополнительная информация</h3>${renderMetadata(product.metadata)}<\/div>` : ''}
+            <\/div>
+            ${renderProductLinks(product.general_product_information, name)}
+          <\/div>
+        <\/div>
+      `;
+    }
+
+    // ==================== РЕНДЕР БЛОКА ПИТАНИЯ (PSU) ====================
+    function renderPSU(product) {
+      const name = product.metadata?.name || product.name || `${product.wattage}W ${product.form_factor}`;
+      const manufacturer = product.metadata?.manufacturer || product.manufacturer;
+      
+      return `
+        <div class="product-detail-card">
+          <div class="product-detail-header"><h1>${escapeHtml(name)}</h1><div class="manufacturer">${escapeHtml(manufacturer)}</div></div>
+          <div class="product-detail-content">
+            <div class="specs-grid">
+              <div class="specs-section"><h3>Основные характеристики</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Мощность<\/td><td class="specs-value">${product.wattage || '?'} W<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Форм-фактор<\/td><td class="specs-value">${product.form_factor || 'ATX'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Сертификат<\/td><td class="specs-value">${product.efficiency_rating || 'Не указан'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Модульность<\/td><td class="specs-value">${product.modular || 'Non-Modular'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Длина<\/td><td class="specs-value">${product.length ? product.length + ' mm' : 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Безвентиляторный<\/td><td class="specs-value">${product.fanless ? 'Да' : 'Нет'}<\/td><\/tr>
+                <\/table>
+              <\/div>
+              <div class="specs-section"><h3>Разъёмы</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">ATX 24-pin<\/td><td class="specs-value">${product.connectors?.atx_24_pin || 0} шт.<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">EPS 8-pin<\/td><td class="specs-value">${product.connectors?.eps_8_pin || 0} шт.<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">PCIe 12VHPWR<\/td><td class="specs-value">${product.connectors?.pcie_12vhpwr || 0} шт.<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">SATA<\/td><td class="specs-value">${product.connectors?.sata || 0} шт.<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Molex 4-pin<\/td><td class="specs-value">${product.connectors?.molex_4_pin || 0} шт.<\/td><\/tr>
+                <\/table>
+              <\/div>
+              ${product.metadata ? `<div class="specs-section"><h3>Дополнительная информация</h3>${renderMetadata(product.metadata)}<\/div>` : ''}
+            <\/div>
+            ${renderProductLinks(product.general_product_information, name)}
+          <\/div>
+        <\/div>
+      `;
+    }
+
+    // ==================== РЕНДЕР КОРПУСА (CASE) ====================
+    function renderCase(product) {
+      const name = product.metadata?.name || product.name;
+      const manufacturer = product.metadata?.manufacturer || product.manufacturer;
+      
+      return `
+        <div class="product-detail-card">
+          <div class="product-detail-header"><h1>${escapeHtml(name)}</h1><div class="manufacturer">${escapeHtml(manufacturer)}</div></div>
+          <div class="product-detail-content">
+            <div class="specs-grid">
+              <div class="specs-section"><h3>Основные характеристики</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Тип корпуса<\/td><td class="specs-value">${product.form_factor || 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Цвет<\/td><td class="specs-value">${product.color?.length ? product.color.join(', ') : 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Боковая панель<\/td><td class="specs-value">${product.side_panel || 'Solid'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Прозрачная панель<\/td><td class="specs-value">${product.has_transparent_side_panel ? 'Да' : 'Нет'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Вес<\/td><td class="specs-value">${product.weight ? product.weight + ' kg' : 'Не указано'}<\/td><\/tr>
+                <\/table>
+              <\/div>
+              <div class="specs-section"><h3>Совместимость</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">Макс. длина GPU<\/td><td class="specs-value">${product.max_video_card_length ? product.max_video_card_length + ' mm' : 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Высота кулера CPU<\/td><td class="specs-value">${product.max_cpu_cooler_height ? product.max_cpu_cooler_height + ' mm' : 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Поддержка материнских плат<\/td><td class="specs-value">${product.supported_motherboard_form_factors?.join(', ') || 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Слоты расширения<\/td><td class="specs-value">${product.expansion_slots || '?'} шт.<\/td><\/tr>
+                <\/table>
+              <\/div>
+              <div class="specs-section"><h3>Отсеки и порты</h3>
+                <table class="specs-table">
+                  <tr class="specs-row"><td class="specs-label">3.5" отсеки<\/td><td class="specs-value">${product.internal_3_5_bays || 0} шт.<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">2.5" отсеки<\/td><td class="specs-value">${product.internal_2_5_bays || 0} шт.<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Фронтальные USB<\/td><td class="specs-value">${product.front_panel_usb || product.front_usb_ports?.join(', ') || 'Не указано'}<\/td><\/tr>
+                  <tr class="specs-row"><td class="specs-label">Размеры<\/td><td class="specs-value">${product.dimensions || (product.dimensions_mm ? `${product.dimensions_mm.width}×${product.dimensions_mm.height}×${product.dimensions_mm.depth} mm` : 'Не указано')}<\/td><\/tr>
+                <\/table>
+              <\/div>
+              ${product.metadata ? `<div class="specs-section"><h3>Дополнительная информация</h3>${renderMetadata(product.metadata)}<\/div>` : ''}
+            <\/div>
+            ${renderProductLinks(product.general_product_information, name)}
+          <\/div>
+        <\/div>
+      `;
+    }
+
+    // ==================== КНОПКИ МАГАЗИНОВ ====================
+    window.searchOnWildberries = (name) => window.open(`https://www.wildberries.ru/catalog/0/search.aspx?search=${encodeURIComponent(name)}`, '_blank');
+    window.searchOnOzon = (name) => window.open(`https://www.ozon.ru/search/?text=${encodeURIComponent(name)}`, '_blank');
+    window.searchOnAvito = (name) => window.open(`https://www.avito.ru/all?q=${encodeURIComponent(name)}`, '_blank');
+    window.searchOnGoogle = (name) => window.open(`https://www.google.com/search?q=${encodeURIComponent(name)}`, '_blank');
+    window.searchOnYandex = (name) => window.open(`https://yandex.ru/search/?text=${encodeURIComponent(name)}`, '_blank');
+    window.searchOnYouTube = (name) => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(name + ' обзор')}`, '_blank');
+    window.openManufacturerUrl = (url) => url && window.open(url, '_blank');
+
+    function renderProductLinks(generalInfo, productName) {
+      const manufacturerUrl = generalInfo?.manufacturer_url;
+      const safeName = productName.replace(/'/g, "\\'");
+      return `
+        <div class="product-links">
+          <h3>Где купить</h3>
+          <div class="links-grid">
+            <button class="product-link" onclick="window.searchOnWildberries('${safeName}')">Wildberries</button>
+            <button class="product-link" onclick="window.searchOnOzon('${safeName}')">Ozon</button>
+            <button class="product-link" onclick="window.searchOnAvito('${safeName}')">Avito</button>
+            ${manufacturerUrl ? `<button class="product-link" onclick="window.openManufacturerUrl('${manufacturerUrl}')">Сайт производителя</button>` : ''}
+            <button class="product-link" onclick="window.searchOnGoogle('${safeName}')">Google</button>
+            <button class="product-link" onclick="window.searchOnYandex('${safeName}')">Яндекс</button>
+            <button class="product-link" onclick="window.searchOnYouTube('${safeName}')">YouTube</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function init() {
+      const { category, id } = getCategoryAndIdFromURL();
+      
+      if (!id) {
+        document.getElementById('product-content').innerHTML = `<div class="loading"><p>ID товара не указан</p><a href="catalog.html" style="color: var(--accent-cyan);">Вернуться в каталог</a></div>`;
+        return;
+      }
+      
+      const product = await loadProduct(category, id);
+      if (!product) {
+        document.getElementById('product-content').innerHTML = `<div class="loading"><p>Товар не найден</p><a href="catalog.html" style="color: var(--accent-cyan);">Вернуться в каталог</a></div>`;
+        return;
+      }
+      
+      const renderer = CATEGORIES[category]?.render;
+      if (renderer) {
+        document.getElementById('product-content').innerHTML = renderer(product);
+      } else {
+        document.getElementById('product-content').innerHTML = `<div class="loading">Неизвестная категория</div>`;
+      }
+    }
+    
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>

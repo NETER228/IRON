@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IRON — Интерактивная база компьютерного железа</title>
+  <link rel="stylesheet" href="main.css">
+<style>
+  /* Убираем стандартный outline у инпута */
+  .search-input:focus {
+    outline: none;
+    border-color: var(--accent-iron);
+    box-shadow: 0 0 0 2px var(--shadow-color);
+  }
+
+  /* Весь hero-section получает высокий z-index */
+  .hero-section {
+    position: relative;
+    z-index: 100;
+  }
+
+  .search-wrapper {
+    position: relative;
+    max-width: 42rem;
+    margin: 0 auto;
+    z-index: 1000;
+  }
+
+  .search-container {
+    position: relative;
+    z-index: 1001;
+  }
+
+  /* Результаты поиска - максимальный z-index и выше hero-section */
+  .search-results-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 10000;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    display: none;
+  }
+
+  .search-results-dropdown.show {
+    display: block;
+  }
+
+  .search-result-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .search-result-item:last-child {
+    border-bottom: none;
+  }
+
+  .search-result-item:hover {
+    background: var(--bg-surface);
+  }
+
+  .search-result-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-result-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .search-result-category {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+  }
+
+  .search-result-badge {
+    background: var(--accent-cyan);
+    color: var(--bg-primary);
+    padding: 0.2rem 0.7rem;
+    border-radius: 9999px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-left: 0.75rem;
+  }
+
+  .search-loading {
+    padding: 1.25rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* Стиль для предложения добавить товар */
+  .suggest-add-item {
+    padding: 1rem 1.25rem;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .suggest-add-item:hover {
+    background: var(--bg-secondary);
+  }
+  .suggest-add-item p {
+    margin-bottom: 0.3rem;
+  }
+  .suggest-add-item .suggest-link {
+    color: var(--accent-cyan);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .suggest-add-item .suggest-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Убираем смайлик лупы, используем SVG */
+  .search-icon {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .search-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+  }
+
+  /* Логотипы - исправляем отображение в тёмной теме */
+  .logo-wrapper {
+    position: relative;
+    min-height: 120px;
+  }
+
+  .iron-logo {
+    max-width: 80%;
+    height: auto;
+    margin: 0 auto;
+    transition: opacity 0.3s ease;
+  }
+
+  .iron-logo-dark {
+    display: block;
+  }
+
+  .iron-logo-light {
+    display: block;
+  }
+
+  :root.light .iron-logo-dark {
+    display: none;
+  }
+
+  :root.light .iron-logo-light {
+    display: block;
+  }
+
+  :root:not(.light) .iron-logo-dark {
+    display: block;
+  }
+
+  :root:not(.light) .iron-logo-light {
+    display: none;
+  }
+
+  .fallback-logo {
+    display: none;
+  }
+
+  .fallback-title {
+    font-size: 4.5rem;
+    font-weight: 900;
+    letter-spacing: -0.25rem;
+  }
+
+  /* Секция "О проекте" - ниже по слою, чтобы не перекрывать поиск */
+  .about-section {
+    position: relative;
+    z-index: 1;
+    background: var(--bg-primary);
+  }
+
+  /* Плавная прокрутка для якоря */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Анимация для статистических карточек - начальное состояние скрыто */
+  .stat-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  .stat-card.animated {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--accent-cyan);
+    margin-bottom: 0.5rem;
+    display: inline-block;
+    position: relative;
+  }
+
+  /* Анимация появления цифр */
+  @keyframes countUp {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Эффект пульсации при наведении */
+  .stat-card:hover .stat-number {
+    animation: pulse 0.5s ease;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Дополнительные стили для карточек */
+  .stat-card {
+    position: relative;
+    cursor: default;
+  }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--accent-cyan);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+  }
+
+  .stat-card:hover::after {
+    width: 60%;
+  }
+
+  /* Анимация для карточек миссии */
+  .card {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .card.animated {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Задержки для карточек */
+  .card:nth-child(1) { transition-delay: 0.1s; }
+  .card:nth-child(2) { transition-delay: 0.2s; }
+  .card:nth-child(3) { transition-delay: 0.3s; }
+  .card:nth-child(4) { transition-delay: 0.4s; }
+</style>
+</head>
+<body>
+
+  <div id="header-container"></div>
+  <canvas id="canvas" class="hero-bg"></canvas>
+
+  <section class="hero-section">
+    <div class="hero-container">
+      
+      <div class="logo-wrapper">
+        <img id="logo-dark" 
+             src="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/LOGO.png" 
+             alt="IRON" 
+             class="iron-logo iron-logo-dark">
+        
+        <img id="logo-light" 
+             src="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/LOGO2.png" 
+             alt="IRON" 
+             class="iron-logo iron-logo-light">
+        
+        <div id="fallback-logo" class="fallback-logo" style="display: none;">
+          <h1 class="fallback-title"><span class="iron-text">IRON</span></h1>
+        </div>
+      </div>
+
+      <p class="hero-slogan">Интерактивная Российская Онлайн-база Железа</p>
+
+      <!-- Поиск с выпадающим списком -->
+      <div class="search-wrapper">
+        <div class="search-container">
+          <input 
+            id="search-input" 
+            type="text" 
+            placeholder="Поиск видеокарт, процессоров, материнских плат..." 
+            class="search-input"
+            autocomplete="off">
+          <div class="search-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+        </div>
+        
+        <div id="search-results" class="search-results-dropdown"></div>
+
+        <div class="search-tags">
+          <span class="search-tag" data-query="RTX 5090">RTX 5090</span>
+          <span class="search-tag" data-query="RX 9070 XT">RX 9070 XT</span>
+          <span class="search-tag" data-query="Ryzen 9 9950X">Ryzen 9 9950X</span>
+          <span class="search-tag" data-query="DDR5-6400">DDR5-6400</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll-hint">
+      <span>Прокрутите вниз</span>
+      <div class="scroll-hint-icon">
+        <div class="scroll-hint-dot"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- О проекте - добавлен id="about-project" для якоря -->
+  <section class="about-section" id="about-project">
+    <div class="about-container">
+      <div class="about-header">
+        <div class="about-badge">Студенческий проект</div>
+        <h2 class="about-title">О проекте IRON</h2>
+        <p class="about-description">
+          Мы создаём открытую базу компьютерного железа, где каждый сможет 
+          найти актуальную информацию о компонентах, сравнить характеристики 
+          и принять взвешенное решение при выборе комплектующих для своего ПК.
+        </p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="total-products-count">0</div>
+          <div class="stat-label">товаров в базе</div>
+          <div class="stat-desc">Видеокарты, процессоры и другие компоненты</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="categories-count">0</div>
+          <div class="stat-label">категорий</div>
+          <div class="stat-desc">GPU • CPU • Материнские платы • RAM • PSU • Storage • Case</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="open-source-count">0</div>
+          <div class="stat-label">свободный доступ</div>
+          <div class="stat-desc">Исходный код доступен на GitHub</div>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-number">01</div>
+          <h3 class="card-title">Наша миссия</h3>
+          <p class="card-text">Создать независимую и объективную базу данных компьютерного железа для российского потребителя.</p>
+        </div>
+        <div class="card">
+          <div class="card-number">02</div>
+          <h3 class="card-title">Планы развития</h3>
+          <p class="card-text">Интеграция с российскими магазинами, система отзывов, AI-помощник по подбору комплектующих.</p>
+        </div>
+        <div class="card">
+          <div class="card-number">03</div>
+          <h3 class="card-title">Технологии</h3>
+          <p class="card-text">Современный стек: HTML5, CSS3, Vanilla JavaScript.</p>
+        </div>
+        <div class="card">
+          <div class="card-number">04</div>
+          <h3 class="card-title">Присоединиться</h3>
+          <p class="card-text">Проект открыт для сотрудничества!</p>
+        </div>
+      </div>
+
+      <div class="about-actions">
+        <a href="catalog.html" class="btn-primary">Перейти в каталог</a>
+        <a href="https://github.com/NETER228/IRON" target="_blank" class="btn-secondary">GitHub проекта →</a>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-container"></div>
+
+  <script src="components.js"></script>
+  <script src="particles.js"></script>
+
+  <script>
+    // ==================== ПЕРЕМЕННЫЕ ====================
+    let allSearchData = [];
+    let isSearchDataLoaded = false;
+    let lastQuery = '';
+    let totalProductsCount = 0;
+    let animationStarted = false;
+
+    // ==================== ФУНКЦИИ АНИМАЦИИ ====================
+    function startAnimations() {
+      if (animationStarted) return;
+      animationStarted = true;
+      
+      // Анимируем статистические карточки
+      const statCards = document.querySelectorAll('.stat-card');
+      statCards.forEach(card => {
+        card.classList.add('animated');
+      });
+      
+      // Анимируем карточки миссии
+      const missionCards = document.querySelectorAll('.card');
+      missionCards.forEach(card => {
+        card.classList.add('animated');
+      });
+      
+      // Запускаем счетчики ТОЛЬКО ПОСЛЕ того как данные загружены
+      if (totalProductsCount > 0) {
+        animateNumber(document.getElementById('total-products-count'), 0, totalProductsCount, 1000);
+      }
+      
+      // Анимация для категорий (всегда 7)
+      const categoriesElement = document.getElementById('categories-count');
+      if (categoriesElement) {
+        animateSeven(categoriesElement);
+      }
+      
+      // Анимация для Open Source
+      const openSourceElement = document.getElementById('open-source-count');
+      if (openSourceElement) {
+        animateOpenSource(openSourceElement);
+      }
+    }
+
+    function animateNumber(element, start, end, duration) {
+      if (!element) return;
+      const startTime = performance.now();
+      
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = Math.floor(start + (end - start) * easeOutQuad(progress));
+        element.textContent = current.toLocaleString();
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      
+      requestAnimationFrame(update);
+    }
+    
+    function easeOutQuad(t) {
+      return t * (2 - t);
+    }
+    
+    function animateSeven(element) {
+      if (!element) return;
+      const chars = ['0', '1', '2', '3', '4', '5', '6', '7'];
+      let index = 0;
+      
+      const interval = setInterval(() => {
+        element.textContent = chars[index % chars.length];
+        index++;
+        if (index > chars.length) {
+          clearInterval(interval);
+          element.textContent = '7';
+        }
+      }, 80);
+    }
+    
+    function animateOpenSource(element) {
+      if (!element) return;
+      const text = 'Open Source';
+      let index = 0;
+      element.textContent = '';
+      
+      const interval = setInterval(() => {
+        element.textContent = text.substring(0, index + 1);
+        index++;
+        if (index === text.length) {
+          clearInterval(interval);
+        }
+      }, 80);
+    }
+
+    // ==================== ФУНКЦИЯ ДЛЯ ПЕРЕХОДА В КАТАЛОГ ====================
+    function goToCatalogWithSuggest() {
+      window.location.href = 'catalog.html?highlight=suggest';
+    }
+
+    // ==================== ЗАГРУЗКА ДАННЫХ ====================
+    async function loadAllSearchData() {
+      if (isSearchDataLoaded) return;
+
+      console.log("Загружаем данные для поиска из всех категорий...");
+
+      const files = [
+        { file: "all GPU.json",       category: "gpu",   name: "Видеокарта", dataKey: "gpus" },
+        { file: "all CPU.json",       category: "cpu",   name: "Процессор", dataKey: "cpus" },
+        { file: "all Motherboard.json", category: "motherboard", name: "Материнская плата", dataKey: "motherboards" },
+        { file: "all RAM.json",       category: "ram",   name: "Оперативная память", dataKey: "rams" },
+        { file: "all Storage.json",   category: "storage", name: "SSD накопитель", dataKey: "storages" },
+        { file: "all PSU.json",       category: "psu",   name: "Блок питания", dataKey: "psus" },
+        { file: "all Case.json",      category: "case",  name: "Корпус", dataKey: "cases" }
+      ];
+
+      for (const item of files) {
+        try {
+          const response = await fetch(item.file);
+          if (!response.ok) {
+            console.warn(`Файл ${item.file} не найден (${response.status})`);
+            continue;
+          }
+
+          const data = await response.json();
+          let items = [];
+
+          if (item.dataKey && data[item.dataKey]) {
+            items = data[item.dataKey];
+          } else if (Array.isArray(data)) {
+            items = data;
+          }
+
+          items.forEach(product => {
+            let name = product.metadata?.name || product.name || product.chipset || product.series || "Без названия";
+            
+            allSearchData.push({
+              id: product.opendb_id || product.id || "unknown",
+              name: name,
+              category: item.category,
+              categoryName: item.name
+            });
+          });
+
+          totalProductsCount += items.length;
+          console.log(`Загружено ${items.length} товаров из ${item.file}`);
+
+        } catch (error) {
+          console.warn(`Не удалось загрузить ${item.file}:`, error.message);
+        }
+      }
+
+      console.log(`Всего загружено ${allSearchData.length} товаров для поиска`);
+      console.log(`Всего товаров в базе: ${totalProductsCount}`);
+      
+      // Обновляем отображение количества товаров (без анимации, просто число)
+      const totalElement = document.getElementById('total-products-count');
+      if (totalElement) {
+        totalElement.textContent = totalProductsCount.toLocaleString();
+      }
+      
+      isSearchDataLoaded = true;
+      
+      // Если анимация уже запущена - запускаем счетчики
+      if (animationStarted && totalProductsCount > 0) {
+        animateNumber(document.getElementById('total-products-count'), 0, totalProductsCount, 1000);
+      }
+      
+      if (lastQuery && lastQuery.length >= 2) {
+        renderSearchResults(searchProducts(lastQuery), lastQuery);
+      }
+    }
+
+    function searchProducts(query) {
+      if (!query || query.length < 2) return [];
+      const q = query.toLowerCase().trim();
+      
+      return allSearchData
+        .filter(item => item.name.toLowerCase().includes(q))
+        .slice(0, 8);
+    }
+
+    function renderSearchResults(results, searchQuery) {
+      const container = document.getElementById('search-results');
+      if (!container) return;
+
+      if (results.length === 0) {
+        container.innerHTML = `
+          <div class="search-loading">Ничего не найдено по запросу "${escapeHtml(searchQuery)}"</div>
+          <div class="suggest-add-item" onclick="goToCatalogWithSuggest()">
+            <p>Возможно, данный товар ещё не добавлен в нашу базу данных.</p>
+            <p>Вы можете <span class="suggest-link">предложить его в каталоге</span> или найти вручную.</p>
+          </div>
+        `;
+        container.classList.add('show');
+        return;
+      }
+
+      let html = '';
+      results.forEach(item => {
+        const safeName = escapeHtml(item.name);
+        const safeCategory = escapeHtml(item.categoryName);
+        html += `
+          <div class="search-result-item" onclick="goToProduct('${item.category}', '${item.id}')">
+            <div class="search-result-info">
+              <div class="search-result-name">${safeName}</div>
+              <div class="search-result-category">${safeCategory}</div>
+            </div>
+            <div class="search-result-badge">${safeCategory}</div>
+          </div>
+        `;
+      });
+      
+      html += `
+        <div class="suggest-add-item" onclick="goToCatalogWithSuggest()">
+          <p>Не нашли нужный товар?</p>
+          <p><span class="suggest-link">Предложить комплектующие в каталоге →</span></p>
+        </div>
+      `;
+
+      container.innerHTML = html;
+      container.classList.add('show');
+    }
+
+    window.goToProduct = function(category, id) {
+      window.location.href = `product.html?category=${category}&id=${id}`;
+    };
+
+    function updateSearchResults() {
+      const input = document.getElementById('search-input');
+      if (!input) return;
+      
+      const query = input.value.trim();
+      lastQuery = query;
+      
+      if (query.length < 2) {
+        document.getElementById('search-results').classList.remove('show');
+        return;
+      }
+
+      if (!isSearchDataLoaded) {
+        const container = document.getElementById('search-results');
+        if (container) {
+          container.innerHTML = `<div class="search-loading">Загрузка базы данных...</div>`;
+          container.classList.add('show');
+        }
+        loadAllSearchData().then(() => {
+          renderSearchResults(searchProducts(query), query);
+        });
+      } else {
+        renderSearchResults(searchProducts(query), query);
+      }
+    }
+
+    function handleSearchInput(e) {
+      updateSearchResults();
+    }
+
+    function quickSearch(query) {
+      const input = document.getElementById('search-input');
+      if (input) {
+        input.value = query;
+        input.focus();
+        lastQuery = query;
+        updateSearchResults();
+      }
+    }
+
+    function closeSearchResults(e) {
+      const wrapper = document.querySelector('.search-wrapper');
+      const input = document.getElementById('search-input');
+      if (wrapper && !wrapper.contains(e.target)) {
+        if (document.activeElement !== input) {
+          document.getElementById('search-results').classList.remove('show');
+        }
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ==================== ЛОГОТИПЫ И ТЕМА ====================
+    function updateLogos() {
+      const isLight = document.documentElement.classList.contains('light');
+      const darkLogo = document.getElementById('logo-dark');
+      const lightLogo = document.getElementById('logo-light');
+      const fallback = document.getElementById('fallback-logo');
+      
+      if (darkLogo && lightLogo) {
+        if (isLight) {
+          darkLogo.style.display = 'none';
+          lightLogo.style.display = 'block';
+        } else {
+          darkLogo.style.display = 'block';
+          lightLogo.style.display = 'none';
+        }
+      }
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('iron-theme');
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const targetTheme = savedTheme || systemTheme;
+      
+      if (targetTheme === 'light') {
+        document.documentElement.classList.add('light');
+      } else {
+        document.documentElement.classList.remove('light');
+      }
+      
+      localStorage.setItem('iron-theme', targetTheme);
+      updateLogos();
+      
+      if (window.updateThemeButton) window.updateThemeButton();
+      if (window.refreshBackground) setTimeout(() => window.refreshBackground(), 50);
+      if (window.initParticles) setTimeout(() => window.initParticles(), 100);
+    }
+
+    // Наблюдатель за изменением темы
+    if (!window.themeObserver) {
+      window.themeObserver = new MutationObserver(() => {
+        updateLogos();
+      });
+      window.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    // ==================== ОТСЛЕЖИВАНИЕ ПРОКРУТКИ ====================
+    function checkScrollForAnimation() {
+      const aboutSection = document.getElementById('about-project');
+      if (aboutSection && !animationStarted) {
+        const rect = aboutSection.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        
+        if (rect.top < windowHeight - 100) {
+          // Данные уже загружены? Если нет - ждём
+          if (isSearchDataLoaded) {
+            startAnimations();
+          } else {
+            // Ждём загрузки данных
+            const checkDataInterval = setInterval(() => {
+              if (isSearchDataLoaded) {
+                clearInterval(checkDataInterval);
+                startAnimations();
+              }
+            }, 100);
+          }
+        }
+      }
+    }
+
+    // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', handleSearchInput);
+        searchInput.addEventListener('focus', () => {
+          if (searchInput.value.trim().length >= 2) {
+            updateSearchResults();
+          }
+        });
+      }
+
+      document.addEventListener('click', closeSearchResults);
+
+      const tags = document.querySelectorAll('.search-tag');
+      tags.forEach(tag => {
+        tag.addEventListener('click', () => {
+          const query = tag.getAttribute('data-query');
+          if (query) quickSearch(query);
+        });
+      });
+
+      // Загружаем данные для поиска
+      setTimeout(() => loadAllSearchData(), 500);
+      
+      // Проверяем прокрутку при загрузке
+      setTimeout(checkScrollForAnimation, 300);
+      
+      // Добавляем обработчик прокрутки
+      window.addEventListener('scroll', checkScrollForAnimation);
+    });
+
+    // Обработка ошибок загрузки логотипов
+    const darkLogoImg = document.getElementById('logo-dark');
+    const lightLogoImg = document.getElementById('logo-light');
+    const fallbackDiv = document.getElementById('fallback-logo');
+    
+    if (darkLogoImg) {
+      darkLogoImg.onerror = function() {
+        this.style.display = 'none';
+        if (fallbackDiv) fallbackDiv.style.display = 'block';
+      };
+    }
+    if (lightLogoImg) {
+      lightLogoImg.onerror = function() {
+        this.style.display = 'none';
+        if (fallbackDiv) fallbackDiv.style.display = 'block';
+      };
+    }
+
+    window.quickSearch = quickSearch;
+    window.goToCatalogWithSuggest = goToCatalogWithSuggest;
+  </script>
+</body>
+</html>

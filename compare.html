@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/fav.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IRON — Сравнение товаров</title>
+  <link rel="stylesheet" href="main.css">
+  <style>
+    .compare-container {
+      max-width: 1400px;
+      margin: 100px auto 2rem;
+      padding: 2rem;
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg-secondary);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      margin-bottom: 2rem;
+      transition: all 0.3s;
+    }
+
+    .back-button:hover {
+      border-color: var(--accent-cyan);
+      transform: translateX(-5px);
+    }
+
+    .compare-header {
+      margin-bottom: 2rem;
+    }
+
+    .compare-header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .compare-header p {
+      color: var(--text-muted);
+    }
+
+    /* Таблица сравнения */
+    .compare-table-wrapper {
+      overflow-x: auto;
+      border-radius: 1rem;
+      border: var(--border-width) solid var(--border-color);
+      background: var(--bg-secondary);
+      margin-bottom: 2rem;
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+
+    .compare-table th,
+    .compare-table td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    .compare-table th {
+      background: var(--bg-surface);
+      font-weight: 600;
+      color: var(--text-secondary);
+      width: 180px;
+      font-size: 0.9rem;
+    }
+
+    .compare-table td {
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      background: var(--bg-secondary);
+    }
+
+    /* Карточка товара в шапке */
+    .product-compare-card {
+      text-align: center;
+      min-width: 220px;
+      padding: 1rem;
+    }
+
+    .product-compare-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .product-compare-manufacturer {
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    .remove-compare {
+      background: none;
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 0.4rem 1rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+      margin-top: 0.5rem;
+    }
+
+    .remove-compare:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.05);
+    }
+
+    /* Стили для значений */
+    .value-best {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+      color: #22c55e;
+      border-radius: 0.5rem;
+      padding: 0.3rem 0.6rem;
+      display: inline-block;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .value-diff {
+      background: rgba(239, 68, 68, 0.08);
+      border-radius: 0.5rem;
+      padding: 0.3rem 0.6rem;
+      display: inline-block;
+    }
+
+    .value-normal {
+      padding: 0.3rem 0.6rem;
+      display: inline-block;
+    }
+
+    /* Пустая ячейка */
+    .empty-cell {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      background: var(--bg-surface);
+    }
+
+    .add-product-cell {
+      text-align: center;
+      vertical-align: middle;
+      background: var(--bg-surface);
+    }
+
+    .add-product-btn {
+      background: var(--bg-secondary);
+      border: 1px dashed var(--border-color);
+      border-radius: 0.75rem;
+      padding: 2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-muted);
+    }
+
+    .add-product-btn:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      transform: translateY(-2px);
+    }
+
+    /* Категория товара */
+    .product-category-badge {
+      display: inline-block;
+      background: var(--accent-cyan);
+      color: var(--bg-primary);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 1rem;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    /* Загрузка */
+    .loading-compare {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+
+    /* Пустое состояние */
+    .empty-state {
+      text-align: center;
+      padding: 4rem;
+      background: var(--bg-secondary);
+      border-radius: 1rem;
+      border: var(--border-width) solid var(--border-color);
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Секции */
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--accent-cyan);
+      display: inline-block;
+    }
+
+    .performance-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .compare-container {
+        padding: 1rem;
+        margin-top: 80px;
+      }
+      .compare-table th,
+      .compare-table td {
+        padding: 0.75rem;
+      }
+      .product-compare-card {
+        min-width: 180px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header-container"></div>
+  <canvas id="canvas" class="hero-bg"></canvas>
+
+  <div class="compare-container">
+    <a href="catalog.html" class="back-button">← Назад в каталог</a>
+    
+    <div class="compare-header">
+      <h1>Сравнение товаров</h1>
+      <p>Наглядное сравнение характеристик выбранных товаров. Лучшие показатели отмечены зеленым цветом.</p>
+    </div>
+
+    <div id="compare-content" class="loading-compare">Загрузка данных...</div>
+  </div>
+
+  <div id="footer-container"></div>
+
+  <script src="components.js"></script>
+  <script src="particles.js"></script>
+
+  <script>
+    // Нормализация производителей
+    function normalizeManufacturer(name) {
+      if (!name) return '';
+      let normalized = name.trim();
+      if (normalized.toUpperCase() === 'ASUS') return 'ASUS';
+      if (normalized.toUpperCase() === 'MSI') return 'MSI';
+      if (normalized.toUpperCase() === 'GIGABYTE') return 'Gigabyte';
+      if (normalized.toUpperCase() === 'EVGA') return 'EVGA';
+      if (normalized.toUpperCase() === 'ZOTAC') return 'Zotac';
+      if (normalized.toUpperCase() === 'PNY') return 'PNY';
+      if (normalized.toUpperCase() === 'SAPPHIRE') return 'Sapphire';
+      if (normalized.toUpperCase() === 'XFX') return 'XFX';
+      if (normalized.toUpperCase() === 'PALIT') return 'Palit';
+      if (normalized.toUpperCase() === 'GAINWARD') return 'Gainward';
+      if (normalized.toUpperCase() === 'INNO3D') return 'Inno3D';
+      if (normalized.toUpperCase() === 'KFA2' || normalized.toUpperCase() === 'GALAX') return 'KFA2/GALAX';
+      if (normalized.toUpperCase() === 'POWERCOLOR') return 'PowerColor';
+      if (normalized.toUpperCase() === 'ASROCK') return 'ASRock';
+      if (normalized.toUpperCase() === 'CORSAIR') return 'Corsair';
+      if (normalized.toUpperCase() === 'FRACTAL DESIGN') return 'Fractal Design';
+      if (normalized.toUpperCase() === 'TEAMGROUP') return 'TEAMGROUP';
+      return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+    }
+
+    // Все загруженные данные
+    let allProductsData = [];
+    let isDataLoaded = false;
+
+    // Загрузка всех JSON файлов
+    async function loadAllData() {
+      if (isDataLoaded) return;
+      
+      console.log("Загружаем данные для сравнения...");
+      
+      const files = [
+        { file: "all GPU.json",       category: "gpu",   name: "Видеокарта", dataKey: "gpus" },
+        { file: "all CPU.json",       category: "cpu",   name: "Процессор", dataKey: "cpus" },
+        { file: "all Motherboard.json", category: "motherboard", name: "Материнская плата", dataKey: "motherboards" },
+        { file: "all RAM.json",       category: "ram",   name: "Оперативная память", dataKey: "rams" },
+        { file: "all Storage.json",   category: "storage", name: "SSD накопитель", dataKey: "storages" },
+        { file: "all PSU.json",       category: "psu",   name: "Блок питания", dataKey: "psus" },
+        { file: "all Case.json",      category: "case",  name: "Корпус", dataKey: "cases" }
+      ];
+
+      for (const item of files) {
+        try {
+          const response = await fetch(item.file);
+          if (!response.ok) {
+            console.warn(`Файл ${item.file} не найден`);
+            continue;
+          }
+          
+          const data = await response.json();
+          let items = data[item.dataKey] || (Array.isArray(data) ? data : []);
+          
+          items.forEach(product => {
+            let name = product.metadata?.name || product.name || product.chipset || product.series || "Без названия";
+            
+            allProductsData.push({
+              id: product.opendb_id || product.id,
+              name: name,
+              category: item.category,
+              categoryName: item.name,
+              fullData: product
+            });
+          });
+          
+          console.log(`Загружено ${items.length} товаров из ${item.file}`);
+        } catch (error) {
+          console.warn(`Ошибка загрузки ${item.file}:`, error.message);
+        }
+      }
+      
+      console.log(`Всего загружено ${allProductsData.length} товаров`);
+      isDataLoaded = true;
+    }
+
+    function findProductById(id) {
+      return allProductsData.find(item => item.id === id);
+    }
+
+    function getProductName(product, category) {
+      if (category === 'gpu') return product.metadata?.name || product.name || product.chipset;
+      if (category === 'cpu') return product.metadata?.name || product.name || `${product.series} ${product.microarchitecture}`;
+      if (category === 'motherboard') return product.metadata?.name || product.name;
+      if (category === 'ram') return product.metadata?.name || product.name || `${product.capacity}GB ${product.ram_type}`;
+      if (category === 'storage') return product.metadata?.name || product.name;
+      if (category === 'psu') return product.metadata?.name || product.name || `${product.wattage}W ${product.form_factor}`;
+      if (category === 'case') return product.metadata?.name || product.name;
+      return 'Без названия';
+    }
+
+    function getManufacturer(product, category) {
+      return normalizeManufacturer(product.metadata?.manufacturer || product.manufacturer);
+    }
+
+    // ==================== ПОЛЯ ДЛЯ СРАВНЕНИЯ ====================
+    const COMPARE_FIELDS = {
+      gpu: {
+        title: "Характеристики видеокарты",
+        groups: [
+          {
+            name: "Основные характеристики",
+            fields: [
+              { key: 'chipset', label: 'Чипсет' },
+              { key: 'chipset_manufacturer', label: 'Производитель чипсета' },
+              { key: 'memory', label: 'Объём памяти', unit: ' GB', isNumber: true, higherIsBetter: true },
+              { key: 'memory_type', label: 'Тип памяти' },
+              { key: 'memory_bus', label: 'Шина памяти', unit: '-bit', isNumber: true, higherIsBetter: true },
+              { key: 'core_base_clock', label: 'Базовая частота', unit: ' MHz', isNumber: true, higherIsBetter: true },
+              { key: 'core_boost_clock', label: 'Boost частота', unit: ' MHz', isNumber: true, higherIsBetter: true },
+              { key: 'core_count', label: 'Количество универсальных процессоров (ALU)', isNumber: true, higherIsBetter: true }
+            ]
+          },
+          {
+            name: "Физические характеристики",
+            fields: [
+              { key: 'tdp', label: 'TDP', unit: ' W', isNumber: true, higherIsBetter: false },
+              { key: 'length', label: 'Длина', unit: ' mm', isNumber: true, higherIsBetter: false },
+              { key: 'total_slot_width', label: 'Занимаемые слоты' },
+              { key: 'cooling', label: 'Охлаждение' },
+              { key: 'interface', label: 'Интерфейс' }
+            ]
+          }
+        ]
+      },
+      cpu: {
+        title: "Характеристики процессора",
+        groups: [
+          {
+            name: "Основные характеристики",
+            fields: [
+              { key: 'series', label: 'Серия' },
+              { key: 'microarchitecture', label: 'Микроархитектура' },
+              { key: 'socket', label: 'Сокет' },
+              { key: 'cores_total', label: 'Количество ядер', isNumber: true, higherIsBetter: true },
+              { key: 'cores_threads', label: 'Количество потоков', isNumber: true, higherIsBetter: true },
+              { key: 'base_clock', label: 'Базовая частота', unit: ' GHz', isNumber: true, higherIsBetter: true },
+              { key: 'boost_clock', label: 'Boost частота', unit: ' GHz', isNumber: true, higherIsBetter: true }
+            ]
+          },
+          {
+            name: "Кэш и технологии",
+            fields: [
+              { key: 'cache_l2', label: 'Кэш L2', unit: ' MB', isNumber: true, higherIsBetter: true },
+              { key: 'cache_l3', label: 'Кэш L3', unit: ' MB', isNumber: true, higherIsBetter: true },
+              { key: 'tdp', label: 'TDP', unit: ' W', isNumber: true, higherIsBetter: false },
+              { key: 'lithography', label: 'Техпроцесс' },
+              { key: 'ecc_support', label: 'ECC поддержка' },
+              { key: 'integrated_graphics', label: 'Встроенная графика' }
+            ]
+          }
+        ]
+      },
+      motherboard: {
+        title: "Характеристики материнской платы",
+        groups: [
+          {
+            name: "Основные характеристики",
+            fields: [
+              { key: 'socket', label: 'Сокет' },
+              { key: 'chipset', label: 'Чипсет' },
+              { key: 'form_factor', label: 'Форм-фактор' },
+              { key: 'memory_slots', label: 'Слоты памяти', isNumber: true, higherIsBetter: true },
+              { key: 'max_memory', label: 'Макс. объём памяти', unit: ' GB', isNumber: true, higherIsBetter: true }
+            ]
+          },
+          {
+            name: "Слоты и порты",
+            fields: [
+              { key: 'm2_slots', label: 'M.2 слоты', isNumber: true, higherIsBetter: true },
+              { key: 'sata_ports', label: 'SATA порты', isNumber: true, higherIsBetter: true },
+              { key: 'raid_support', label: 'RAID поддержка' }
+            ]
+          }
+        ]
+      },
+      ram: {
+        title: "Характеристики оперативной памяти",
+        groups: [
+          {
+            name: "Основные характеристики",
+            fields: [
+              { key: 'capacity', label: 'Общий объём', unit: ' GB', isNumber: true, higherIsBetter: true },
+              { key: 'ram_type', label: 'Тип памяти' },
+              { key: 'speed', label: 'Частота', unit: ' MHz', isNumber: true, higherIsBetter: true },
+              { key: 'cas_latency', label: 'CAS Latency', isNumber: true, higherIsBetter: false },
+              { key: 'voltage', label: 'Напряжение', unit: ' V' }
+            ]
+          },
+          {
+            name: "Физические характеристики",
+            fields: [
+              { key: 'form_factor', label: 'Форм-фактор' },
+              { key: 'ecc', label: 'ECC' },
+              { key: 'registered', label: 'Регистровая' },
+              { key: 'heat_spreader', label: 'Радиатор' },
+              { key: 'rgb', label: 'RGB подсветка' }
+            ]
+          }
+        ]
+      },
+      storage: {
+        title: "Характеристики SSD",
+        groups: [
+          {
+            name: "Основные характеристики",
+            fields: [
+              { key: 'capacity', label: 'Объём', unit: ' GB', isNumber: true, higherIsBetter: true },
+              { key: 'type', label: 'Тип' },
+              { key: 'form_factor', label: 'Форм-фактор' },
+              { key: 'interface', label: 'Интерфейс' },
+              { key: 'nvme', label: 'NVMe' }
+            ]
+          }
+        ]
+      },
+      psu: {
+        title: "Характеристики блока питания",
+        groups: [
+          {
+            name: "Основные характеристики",
+            fields: [
+              { key: 'wattage', label: 'Мощность', unit: ' W', isNumber: true, higherIsBetter: true },
+              { key: 'form_factor', label: 'Форм-фактор' },
+              { key: 'efficiency_rating', label: 'Сертификат 80+' },
+              { key: 'modular', label: 'Модульность' },
+              { key: 'length', label: 'Длина', unit: ' mm', isNumber: true, higherIsBetter: false },
+              { key: 'fanless', label: 'Безвентиляторный' }
+            ]
+          }
+        ]
+      },
+      case: {
+        title: "Характеристики корпуса",
+        groups: [
+          {
+            name: "Основные характеристики",
+            fields: [
+              { key: 'form_factor', label: 'Тип корпуса' },
+              { key: 'max_video_card_length', label: 'Макс. длина видеокарты', unit: ' mm', isNumber: true, higherIsBetter: true },
+              { key: 'max_cpu_cooler_height', label: 'Макс. высота кулера', unit: ' mm', isNumber: true, higherIsBetter: true },
+              { key: 'internal_3_5_bays', label: '3.5" отсеки', isNumber: true, higherIsBetter: true },
+              { key: 'internal_2_5_bays', label: '2.5" отсеки', isNumber: true, higherIsBetter: true },
+              { key: 'side_panel', label: 'Боковая панель' }
+            ]
+          }
+        ]
+      }
+    };
+
+    // Получение значения из продукта
+    function getProductValue(product, category, fieldKey) {
+      if (category === 'cpu') {
+        if (fieldKey === 'cores_total') return product.cores?.total || product.cores;
+        if (fieldKey === 'cores_threads') return product.cores?.threads;
+        if (fieldKey === 'base_clock') return product.clocks?.performance?.base;
+        if (fieldKey === 'boost_clock') return product.clocks?.performance?.boost;
+        if (fieldKey === 'cache_l2') return product.cache?.l2;
+        if (fieldKey === 'cache_l3') return product.cache?.l3;
+        if (fieldKey === 'lithography') return product.specifications?.lithography;
+        if (fieldKey === 'ecc_support') return product.specifications?.eccSupport ? 'Да' : 'Нет';
+        if (fieldKey === 'integrated_graphics') return product.specifications?.integratedGraphics?.model || 'Нет';
+        if (fieldKey === 'tdp') return product.specifications?.tdp || product.tdp;
+      }
+      
+      if (category === 'motherboard') {
+        if (fieldKey === 'memory_slots') return product.memory?.slots;
+        if (fieldKey === 'max_memory') return product.memory?.max;
+        if (fieldKey === 'm2_slots') return product.m2_slots?.length;
+        if (fieldKey === 'sata_ports') return product.storage_devices?.sata_6_gb_s;
+        if (fieldKey === 'raid_support') return product.raid_support ? 'Да' : 'Нет';
+      }
+      
+      if (category === 'ram') {
+        if (fieldKey === 'capacity') return product.capacity || (product.modules?.capacity_gb ? product.modules.quantity * product.modules.capacity_gb : null);
+        if (fieldKey === 'ram_type') return product.ram_type || product.type;
+        if (fieldKey === 'cas_latency') return product.cas_latency;
+        if (fieldKey === 'ecc') return product.ecc || 'Non-ECC';
+        if (fieldKey === 'registered') return product.registered || 'Unbuffered';
+        if (fieldKey === 'heat_spreader') return product.heat_spreader ? 'Да' : 'Нет';
+        if (fieldKey === 'rgb') return product.rgb ? 'Да' : 'Нет';
+      }
+      
+      if (category === 'storage') {
+        if (fieldKey === 'nvme') return product.nvme ? 'Да' : 'Нет';
+        if (fieldKey === 'type') return product.type || product.storage_type;
+      }
+      
+      if (category === 'psu') {
+        if (fieldKey === 'fanless') return product.fanless ? 'Да' : 'Нет';
+      }
+      
+      if (category === 'case') {
+        if (fieldKey === 'side_panel') return product.side_panel || 'Solid';
+      }
+      
+      return product[fieldKey];
+    }
+
+    // Форматирование значения
+    function formatValue(value, field) {
+      if (value === undefined || value === null || value === '') return '—';
+      if (typeof value === 'boolean') return value ? 'Да' : 'Нет';
+      if (field.isNumber && !isNaN(parseFloat(value))) {
+        return `${value}${field.unit || ''}`;
+      }
+      return value;
+    }
+
+    // Определение лучшего значения для группы
+    function getBestValues(products, category, fields) {
+      const bestMap = {};
+      
+      for (const field of fields) {
+        if (!field.isNumber) continue;
+        
+        let bestIndex = -1;
+        let bestValue = field.higherIsBetter ? -Infinity : Infinity;
+        
+        products.forEach((p, idx) => {
+          let val = getProductValue(p.product, category, field.key);
+          if (val === undefined || val === null) return;
+          val = parseFloat(val);
+          if (isNaN(val)) return;
+          
+          if (field.higherIsBetter) {
+            if (val > bestValue) { bestValue = val; bestIndex = idx; }
+          } else {
+            if (val < bestValue) { bestValue = val; bestIndex = idx; }
+          }
+        });
+        
+        if (bestIndex !== -1) bestMap[field.key] = bestIndex;
+      }
+      
+      return bestMap;
+    }
+
+    function escapeHtml(text) {
+      if (!text && text !== 0) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function removeFromCompare(id) {
+      let compareList = JSON.parse(localStorage.getItem('iron_compare_list') || '[]');
+      compareList = compareList.filter(item => item.id !== id);
+      localStorage.setItem('iron_compare_list', JSON.stringify(compareList));
+      location.reload();
+    }
+
+    function addMoreProducts() {
+      window.location.href = 'catalog.html';
+    }
+
+    async function renderCompare() {
+      const compareList = JSON.parse(localStorage.getItem('iron_compare_list') || '[]');
+      const container = document.getElementById('compare-content');
+      
+      if (compareList.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M8 6h13M8 12h13M8 18h13M3 6h0M3 12h0M3 18h0" stroke-linecap="round"/>
+              <circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/>
+            </svg>
+            <h3>Нет товаров для сравнения</h3>
+            <p>Добавьте товары в список сравнения на странице каталога</p>
+            <a href="catalog.html" class="btn-primary" style="display: inline-block;">Перейти в каталог</a>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = '<div class="loading-compare">Загрузка данных...</div>';
+      
+      await loadAllData();
+      
+      const foundProducts = [];
+      for (const item of compareList) {
+        const found = findProductById(item.id);
+        if (found && found.fullData) {
+          foundProducts.push({
+            id: item.id,
+            name: found.name,
+            category: found.category,
+            product: found.fullData
+          });
+        }
+      }
+      
+      if (foundProducts.length === 0) {
+        container.innerHTML = '<div class="loading-compare">Не удалось найти товары для сравнения</div>';
+        return;
+      }
+      
+      const category = foundProducts[0].category;
+      const config = COMPARE_FIELDS[category];
+      
+      if (!config) {
+        container.innerHTML = '<div class="loading-compare">Сравнение для этой категории пока не реализовано</div>';
+        return;
+      }
+      
+      // Собираем все поля для определения лучших значений
+      const allFields = config.groups.flatMap(g => g.fields);
+      const bestValues = getBestValues(foundProducts, category, allFields);
+      
+      let html = `
+        <div class="compare-table-wrapper">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>Характеристики</th>
+                ${foundProducts.map((p, idx) => `
+                  <td class="product-compare-card">
+                    <div class="product-category-badge">${CATEGORY_NAMES[category] || category.toUpperCase()}</div>
+                    <div class="product-compare-name">${escapeHtml(getProductName(p.product, category).substring(0, 60))}${getProductName(p.product, category).length > 60 ? '...' : ''}</div>
+                    <div class="product-compare-manufacturer">${escapeHtml(getManufacturer(p.product, category))}</div>
+                    <button class="remove-compare" onclick="removeFromCompare('${p.id}')">Удалить</button>
+                  </td>
+                `).join('')}
+                ${foundProducts.length < 4 ? `
+                  <td class="add-product-cell">
+                    <div class="add-product-btn" onclick="addMoreProducts()">
+                      + Добавить товар
+                    </div>
+                  </td>
+                ` : ''}
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      // Группы характеристик
+      for (const group of config.groups) {
+        html += `<tr class="spec-group"><th colspan="${foundProducts.length + 1}" style="background: var(--bg-surface); font-weight: 700; color: var(--accent-cyan);">${group.name}</th></tr>`;
+        
+        for (const field of group.fields) {
+          const values = foundProducts.map((p, idx) => {
+            let value = getProductValue(p.product, category, field.key);
+            const formatted = formatValue(value, field);
+            const isBest = bestValues[field.key] === idx && formatted !== '—';
+            
+            let valueClass = 'value-normal';
+            if (isBest) valueClass = 'value-best';
+            else if (foundProducts.length > 1 && !isBest && formatted !== '—') valueClass = 'value-diff';
+            
+            return `<span class="${valueClass}">${escapeHtml(formatted)}</span>`;
+          });
+          
+          html += `
+            <tr>
+              <th>${field.label}</th>
+              ${values.map(v => `<td>${v}</td>`).join('')}
+              ${foundProducts.length < 4 ? '<td class="empty-cell">—</td>' : ''}
+            </tr>
+          `;
+        }
+      }
+      
+      html += `
+            </tbody>
+          </table>
+        </div>
+        <div class="performance-note">
+          Зеленым цветом выделены лучшие показатели в каждой категории
+        </div>
+      `;
+      
+      container.innerHTML = html;
+    }
+    
+    // Названия категорий
+    const CATEGORY_NAMES = {
+      gpu: 'Видеокарта',
+      cpu: 'Процессор',
+      motherboard: 'Материнская плата',
+      ram: 'Оперативная память',
+      storage: 'SSD накопитель',
+      psu: 'Блок питания',
+      case: 'Корпус'
+    };
+    
+    window.removeFromCompare = removeFromCompare;
+    window.addMoreProducts = addMoreProducts;
+    
+    renderCompare();
+  </script>
+</body>
+</html>

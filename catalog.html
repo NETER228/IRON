@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/fav.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Каталог — IRON</title>
+  <link rel="stylesheet" href="main.css">
+  <style>
+    .filter-search {
+      width: 100%;
+      padding: 0.4rem 0.6rem;
+      background: var(--bg-secondary);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: 0.5rem;
+      color: var(--text-primary);
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .filter-search::placeholder {
+      color: var(--text-muted);
+    }
+    .filter-options {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .filter-options::-webkit-scrollbar {
+      width: 4px;
+    }
+    .filter-group.collapsed .filter-options {
+      display: none;
+    }
+    .filter-toggle {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .filter-toggle:hover {
+      color: var(--accent-cyan);
+    }
+    .filter-arrow {
+      transition: transform 0.2s;
+    }
+    .filter-group.collapsed .filter-arrow {
+      transform: rotate(-90deg);
+    }
+
+    /* Модальное окно */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 10001;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: var(--bg-secondary);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: 1.5rem;
+      width: 90%;
+      max-width: 500px;
+      max-height: 85vh;
+      overflow: hidden;
+      animation: modalFadeIn 0.2s ease;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      font-size: 1.25rem;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .modal-close:hover {
+      color: var(--accent-cyan);
+    }
+    .modal-body {
+      padding: 1.5rem;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    .modal-footer {
+      padding: 1.5rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+    .modal-btn {
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    .modal-btn-primary {
+      background: var(--accent-iron);
+      border: none;
+      color: var(--bg-primary);
+    }
+    .modal-btn-primary:hover {
+      background: var(--accent-iron-dark);
+      transform: translateY(-2px);
+    }
+    .modal-btn-secondary {
+      background: transparent;
+      border: var(--border-width) solid var(--border-color);
+      color: var(--text-primary);
+    }
+    .modal-btn-secondary:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    /* Форма предложения товара */
+    .suggest-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 0.6rem;
+      background: var(--bg-surface);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: 0.5rem;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .form-hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+    .success-message {
+      text-align: center;
+      padding: 2rem;
+      background: rgba(34, 197, 94, 0.1);
+      border-radius: 0.5rem;
+    }
+    .error-message {
+      text-align: center;
+      padding: 2rem;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 0.5rem;
+    }
+
+    /* Панель сравнения внизу */
+    .compare-bar {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: var(--bg-secondary);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: 3rem;
+      padding: 0.5rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .compare-bar:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-cyan);
+    }
+    .compare-count {
+      background: var(--accent-cyan);
+      color: var(--bg-primary);
+      border-radius: 9999px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    /* Кнопка предложения товара */
+    .suggest-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 1000;
+      background: var(--bg-secondary);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: 3rem;
+      padding: 0.5rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .suggest-btn:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    /* Анимация подсветки кнопки */
+    @keyframes pulseGlow {
+      0% { transform: scale(1); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+      50% { transform: scale(1.05); box-shadow: 0 0 0 3px var(--accent-cyan), 0 4px 20px rgba(0, 0, 0, 0.3); }
+      100% { transform: scale(1); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+    }
+    .suggest-btn.highlight {
+      animation: pulseGlow 0.5s ease-in-out 3;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 2px var(--accent-cyan), 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Карточка товара */
+    .product-card {
+      background-color: var(--bg-secondary);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+    }
+    .product-card:hover {
+      border-color: var(--accent-cyan);
+      transform: translateY(-4px);
+      box-shadow: 0 0 20px var(--shadow-color);
+    }
+    .top-bar {
+      margin-top: 0.5rem;
+    }
+
+    body {
+      padding-top: 80px;
+    }
+    .catalog-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem 2rem;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 2.5rem;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding-top: 120px;
+      }
+      .catalog-container {
+        grid-template-columns: 1fr;
+      }
+      .suggest-btn {
+        bottom: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header-container"></div>
+  <canvas id="canvas" class="hero-bg"></canvas>
+
+  <div class="catalog-container">
+    <aside class="filters-sidebar">
+      <h3 style="margin-bottom: 1.5rem; font-size: 1.3rem;">Фильтры</h3>
+      
+      <div class="filter-group">
+        <h4>Категория</h4>
+        <div class="filter-option"><input type="radio" name="category" value="gpu" id="cat-gpu"><label for="cat-gpu">Видеокарты</label></div>
+        <div class="filter-option"><input type="radio" name="category" value="cpu" id="cat-cpu"><label for="cat-cpu">Процессоры</label></div>
+        <div class="filter-option"><input type="radio" name="category" value="motherboard" id="cat-mb"><label for="cat-mb">Материнские платы</label></div>
+        <div class="filter-option"><input type="radio" name="category" value="ram" id="cat-ram"><label for="cat-ram">Оперативная память</label></div>
+        <div class="filter-option"><input type="radio" name="category" value="storage" id="cat-storage"><label for="cat-storage">SSD накопители</label></div>
+        <div class="filter-option"><input type="radio" name="category" value="psu" id="cat-psu"><label for="cat-psu">Блоки питания</label></div>
+        <div class="filter-option"><input type="radio" name="category" value="case" id="cat-case"><label for="cat-case">Корпуса</label></div>
+      </div>
+
+      <div id="dynamic-filters"></div>
+      <button id="reset-filters" style="width:100%; margin-top:1rem; padding:0.6rem; background:transparent; border:var(--border-width) solid var(--border-color); border-radius:0.5rem; color:var(--text-secondary); cursor:pointer;">Сбросить фильтры</button>
+    </aside>
+
+    <main>
+      <div class="top-bar">
+        <div class="results-info" id="results-info">Загрузка...</div>
+        <div style="display:flex; gap:1rem;">
+          <select id="per-page" class="per-page-select">
+            <option value="12">12 на странице</option>
+            <option value="24" selected>24 на странице</option>
+            <option value="48">48 на странице</option>
+            <option value="96">96 на странице</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="products-grid" id="products-grid"><div class="no-results">Загрузка данных...</div></div>
+      <div class="pagination" id="pagination"></div>
+    </main>
+  </div>
+
+  <!-- Кнопка предложения товара -->
+  <div class="suggest-btn" id="suggest-btn" onclick="openSuggestModal()">
+    <span>Предложить товар</span>
+  </div>
+
+  <!-- Панель сравнения -->
+  <div class="compare-bar" id="compare-bar" style="display: none;" onclick="goToCompare()">
+    <span>Сравнить</span>
+    <span class="compare-count" id="compare-count">0</span>
+  </div>
+
+  <!-- Модальное окно сравнения -->
+  <div id="compare-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Сравнение товаров</h3>
+        <button class="modal-close" onclick="closeCompareModal()">✕</button>
+      </div>
+      <div class="modal-body" id="compare-modal-body">
+        <div class="empty-compare">Загрузка...</div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-secondary" onclick="closeCompareModal()">Отмена</button>
+        <button class="modal-btn modal-btn-primary" onclick="goToComparePage()">Перейти к сравнению →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно предложения товара -->
+  <div id="suggest-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Предложить товар</h3>
+        <button class="modal-close" onclick="closeSuggestModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="suggest-form" class="suggest-form">
+          <div class="form-group">
+            <label>Категория *</label>
+            <select id="suggest-category" required>
+              <option value="">Выберите категорию</option>
+              <option value="gpu">Видеокарта</option>
+              <option value="cpu">Процессор</option>
+              <option value="motherboard">Материнская плата</option>
+              <option value="ram">Оперативная память</option>
+              <option value="storage">SSD накопитель</option>
+              <option value="psu">Блок питания</option>
+              <option value="case">Корпус</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Название товара *</label>
+            <input type="text" id="suggest-name" placeholder="Например: NVIDIA GeForce RTX 5090" required>
+          </div>
+          <div class="form-group">
+            <label>Ссылка на товар *</label>
+            <input type="url" id="suggest-url" placeholder="https://example.com/product" required>
+          </div>
+          <div class="form-group">
+            <label>Дополнительная информация (необязательно)</label>
+            <textarea id="suggest-details" placeholder="Характеристики, особенности, примечания..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Ваше имя или контакт (необязательно)</label>
+            <input type="text" id="suggest-contact" placeholder="Telegram, email...">
+          </div>
+          <div class="form-hint">* — обязательные поля</div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-secondary" onclick="closeSuggestModal()">Отмена</button>
+        <button class="modal-btn modal-btn-primary" onclick="submitSuggestion()">Отправить предложение</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-container"></div>
+
+  <script src="components.js"></script>
+  <script src="particles.js"></script>
+
+  <script>
+    // ==================== SUPABASE КОНФИГУРАЦИЯ ====================
+    const SUPABASE_URL = 'https://wmsocaoixfhcicczgklb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indtc29jYW9peGZoY2ljY3pna2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTEzMTQsImV4cCI6MjA5MTQ4NzMxNH0.1pKUY3VDqO0K8xZFi_XGMcwYSiMNxB-_cH8nUOWA6fw';
+
+    // ==================== ПОДСВЕТКА КНОПКИ ПРИ ПЕРЕХОДЕ ИЗ ПОИСКА ====================
+    function checkHighlight() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const highlight = urlParams.get('highlight');
+      
+      if (highlight === 'suggest') {
+        const suggestBtn = document.getElementById('suggest-btn');
+        if (suggestBtn) {
+          suggestBtn.classList.add('highlight');
+          setTimeout(() => {
+            suggestBtn.classList.remove('highlight');
+          }, 3000);
+        }
+      }
+    }
+
+    // ==================== ФУНКЦИЯ ПРОВЕРКИ URL ====================
+    function isValidUrl(url) {
+      if (!url) return false;
+      if (url.trim() === '') return false;
+      
+      const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
+      if (!urlPattern.test(url)) return false;
+      
+      const hasDot = url.match(/\.(ru|com|net|org|io|me|su|рф|[a-z]{2,})/i);
+      if (!hasDot) return false;
+      
+      const forbiddenChars = /[<>{}|\\^`]/;
+      if (forbiddenChars.test(url)) return false;
+      
+      return true;
+    }
+
+    // ==================== ФУНКЦИЯ ОТПРАВКИ ПРЕДЛОЖЕНИЯ ====================
+    async function submitSuggestion() {
+      const category = document.getElementById('suggest-category').value;
+      const name = document.getElementById('suggest-name').value.trim();
+      let url = document.getElementById('suggest-url').value.trim();
+      const details = document.getElementById('suggest-details').value.trim();
+      const contact = document.getElementById('suggest-contact').value.trim();
+      
+      if (!category) {
+        alert('Выберите категорию');
+        return;
+      }
+      if (!name) {
+        alert('Введите название товара');
+        return;
+      }
+      if (name.length < 3) {
+        alert('Название товара слишком короткое (минимум 3 символа)');
+        return;
+      }
+      if (name.length > 200) {
+        alert('Название товара слишком длинное (максимум 200 символов)');
+        return;
+      }
+      if (!url) {
+        alert('Введите ссылку на товар');
+        return;
+      }
+      
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      
+      if (!isValidUrl(url)) {
+        alert('Пожалуйста, введите корректную ссылку. Пример: example.com/shop  или  https://market.ru/product');
+        return;
+      }
+      
+      if (url.length > 500) {
+        alert('Ссылка слишком длинная (максимум 500 символов)');
+        return;
+      }
+      
+      if (details && details.length > 1000) {
+        alert('Дополнительная информация слишком длинная (максимум 1000 символов)');
+        return;
+      }
+      
+      if (contact && contact.length > 100) {
+        alert('Контактные данные слишком длинные (максимум 100 символов)');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/suggestions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            category: category,
+            name: name,
+            url: url,
+            details: details || null,
+            contact: contact || null,
+            status: 'pending',
+            created_at: new Date().toISOString()
+          })
+        });
+        
+        if (response.ok) {
+          document.getElementById('suggest-category').value = '';
+          document.getElementById('suggest-name').value = '';
+          document.getElementById('suggest-url').value = '';
+          document.getElementById('suggest-details').value = '';
+          document.getElementById('suggest-contact').value = '';
+          
+          const modalBody = document.querySelector('#suggest-modal .modal-body');
+          const originalContent = modalBody.innerHTML;
+          modalBody.innerHTML = `
+            <div class="success-message">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+              <h3 style="margin-bottom: 0.5rem;">Спасибо за предложение!</h3>
+              <p style="color: var(--text-muted);">Мы рассмотрим ваш товар в ближайшее время.</p>
+            </div>
+          `;
+          
+          setTimeout(() => {
+            modalBody.innerHTML = originalContent;
+            closeSuggestModal();
+          }, 3000);
+        } else {
+          throw new Error('Ошибка отправки');
+        }
+      } catch (error) {
+        console.error('Ошибка:', error);
+        const modalBody = document.querySelector('#suggest-modal .modal-body');
+        const originalContent = modalBody.innerHTML;
+        modalBody.innerHTML = `
+          <div class="error-message">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+            <h3 style="margin-bottom: 0.5rem;">Ошибка отправки</h3>
+            <p style="color: var(--text-muted);">Проверьте ссылку или попробуйте позже.</p>
+          </div>
+        `;
+        setTimeout(() => {
+          modalBody.innerHTML = originalContent;
+        }, 3000);
+      }
+    }
+
+    // ==================== ФУНКЦИИ МОДАЛЬНЫХ ОКОН ====================
+    window.openSuggestModal = function() {
+      document.getElementById('suggest-modal').classList.add('active');
+    };
+
+    window.closeSuggestModal = function() {
+      document.getElementById('suggest-modal').classList.remove('active');
+    };
+
+    // ==================== НОРМАЛИЗАЦИЯ ПРОИЗВОДИТЕЛЕЙ ====================
+    function normalizeManufacturer(name) {
+      if (!name) return '';
+      let normalized = name.trim();
+      if (normalized.toUpperCase() === 'ASUS') return 'ASUS';
+      if (normalized.toUpperCase() === 'MSI') return 'MSI';
+      if (normalized.toUpperCase() === 'GIGABYTE') return 'Gigabyte';
+      if (normalized.toUpperCase() === 'EVGA') return 'EVGA';
+      if (normalized.toUpperCase() === 'ZOTAC') return 'Zotac';
+      if (normalized.toUpperCase() === 'PNY') return 'PNY';
+      if (normalized.toUpperCase() === 'SAPPHIRE') return 'Sapphire';
+      if (normalized.toUpperCase() === 'XFX') return 'XFX';
+      if (normalized.toUpperCase() === 'PALIT') return 'Palit';
+      if (normalized.toUpperCase() === 'GAINWARD') return 'Gainward';
+      if (normalized.toUpperCase() === 'INNO3D') return 'Inno3D';
+      if (normalized.toUpperCase() === 'KFA2' || normalized.toUpperCase() === 'GALAX') return 'KFA2/GALAX';
+      if (normalized.toUpperCase() === 'POWERCOLOR') return 'PowerColor';
+      if (normalized.toUpperCase() === 'ASROCK') return 'ASRock';
+      if (normalized.toUpperCase() === 'CORSAIR') return 'Corsair';
+      if (normalized.toUpperCase() === 'FRACTAL DESIGN') return 'Fractal Design';
+      if (normalized.toUpperCase() === 'TEAMGROUP') return 'TEAMGROUP';
+      return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+    }
+
+    // ==================== КОНФИГУРАЦИЯ КАТЕГОРИЙ ====================
+    const CATEGORIES = {
+      gpu: {
+        name: 'Видеокарты',
+        file: 'all GPU.json',
+        dataKey: 'gpus',
+        getId: (item) => item.opendb_id,
+        getName: (item) => item.metadata?.name || item.name || item.chipset,
+        getManufacturer: (item) => normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+        getSpecs: (item) => [
+          { label: 'Память', value: `${item.memory || '?'} GB ${item.memory_type || ''}` },
+          { label: 'Boost', value: `${item.core_boost_clock || '?'} MHz` },
+          { label: 'TDP', value: `${item.tdp || '?'} W` }
+        ],
+        getFilterValues: (item) => ({
+          manufacturer: normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+          chipset: item.chipset_manufacturer,
+          memory: item.memory
+        }),
+        getFilterConfig: () => ({
+          manufacturers: { type: 'checkbox', label: 'Производитель' },
+          chipsets: { type: 'checkbox', label: 'Производитель чипсета' },
+          memory: { type: 'checkbox', label: 'Объём памяти (GB)', options: [4, 6, 8, 10, 11, 12, 16, 20, 24, 32] }
+        })
+      },
+      cpu: {
+        name: 'Процессоры',
+        file: 'all CPU.json',
+        dataKey: 'cpus',
+        getId: (item) => item.opendb_id,
+        getName: (item) => item.metadata?.name || item.name || `${item.series} ${item.microarchitecture}`,
+        getManufacturer: (item) => normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+        getSpecs: (item) => [
+          { label: 'Ядра', value: `${item.cores?.total || item.cores || '?'} / ${item.cores?.threads || '?'}` },
+          { label: 'Частота', value: `${item.clocks?.performance?.base || '?'} / ${item.clocks?.performance?.boost || '?'} GHz` },
+          { label: 'TDP', value: `${item.specifications?.tdp || item.tdp || '?'} W` }
+        ],
+        getFilterValues: (item) => ({
+          manufacturer: normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+          socket: item.socket,
+          cores: item.cores?.total || item.cores
+        }),
+        getFilterConfig: () => ({
+          manufacturers: { type: 'checkbox', label: 'Производитель' },
+          sockets: { type: 'checkbox', label: 'Сокет' },
+          cores: { type: 'checkbox', label: 'Количество ядер', options: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 32, 48, 56, 64] }
+        })
+      },
+      motherboard: {
+        name: 'Материнские платы',
+        file: 'all Motherboard.json',
+        dataKey: 'motherboards',
+        getId: (item) => item.opendb_id,
+        getName: (item) => item.metadata?.name || item.name,
+        getManufacturer: (item) => normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+        getSpecs: (item) => [
+          { label: 'Сокет', value: item.socket || '?' },
+          { label: 'Чипсет', value: item.chipset || '?' },
+          { label: 'Форм-фактор', value: item.form_factor || '?' }
+        ],
+        getFilterValues: (item) => ({
+          manufacturer: normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+          socket: item.socket,
+          chipset: item.chipset,
+          form_factor: item.form_factor
+        }),
+        getFilterConfig: () => ({
+          manufacturers: { type: 'checkbox', label: 'Производитель' },
+          sockets: { type: 'checkbox', label: 'Сокет' },
+          chipsets: { type: 'checkbox', label: 'Чипсет' },
+          form_factors: { type: 'checkbox', label: 'Форм-фактор', options: ['ATX', 'Micro ATX', 'Mini ITX', 'E-ATX', 'BTX'] }
+        })
+      },
+      ram: {
+        name: 'Оперативная память',
+        file: 'all RAM.json',
+        dataKey: 'rams',
+        getId: (item) => item.opendb_id,
+        getName: (item) => item.metadata?.name || item.name || `${item.capacity}GB ${item.ram_type}`,
+        getManufacturer: (item) => normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+        getSpecs: (item) => [
+          { label: 'Объём', value: `${item.capacity || item.modules?.capacity_gb || '?'} GB` },
+          { label: 'Тип', value: item.ram_type || item.type || '?' },
+          { label: 'Частота', value: `${item.speed || '?'} MHz` }
+        ],
+        getFilterValues: (item) => ({
+          manufacturer: normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+          capacity: item.capacity || (item.modules?.capacity_gb ? item.modules.quantity * item.modules.capacity_gb : null),
+          type: item.ram_type || item.type,
+          speed: item.speed
+        }),
+        getFilterConfig: () => ({
+          manufacturers: { type: 'checkbox', label: 'Производитель' },
+          types: { type: 'checkbox', label: 'Тип памяти', options: ['DDR3', 'DDR4', 'DDR5'] },
+          capacity: { type: 'checkbox', label: 'Объём (GB)', options: [4, 8, 16, 24, 32, 48, 64, 96, 128] },
+          speed: { type: 'checkbox', label: 'Частота (MHz)', options: [2133, 2400, 2666, 2933, 3200, 3600, 4000, 4266, 4400, 4800, 5200, 5600, 6000, 6400, 6800, 7200, 7600, 8000] }
+        })
+      },
+      storage: {
+        name: 'SSD накопители',
+        file: 'all Storage.json',
+        dataKey: 'storages',
+        getId: (item) => item.opendb_id,
+        getName: (item) => item.metadata?.name || item.name,
+        getManufacturer: (item) => normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+        getSpecs: (item) => [
+          { label: 'Объём', value: `${item.capacity || '?'} GB` },
+          { label: 'Тип', value: item.type || item.storage_type || '?' },
+          { label: 'Интерфейс', value: item.interface || '?' }
+        ],
+        getFilterValues: (item) => ({
+          manufacturer: normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+          capacity: item.capacity,
+          type: item.type || item.storage_type
+        }),
+        getFilterConfig: () => ({
+          manufacturers: { type: 'checkbox', label: 'Производитель' },
+          types: { type: 'checkbox', label: 'Тип', options: ['SSD', 'NVMe SSD', 'M.2 SSD', 'SATA SSD', 'PCIe SSD'] },
+          capacity: { type: 'checkbox', label: 'Объём (GB)', options: [128, 256, 512, 1000, 1024, 2000, 2048, 4000, 4096, 8000] }
+        })
+      },
+      psu: {
+        name: 'Блоки питания',
+        file: 'all PSU.json',
+        dataKey: 'psus',
+        getId: (item) => item.opendb_id,
+        getName: (item) => item.metadata?.name || item.name || `${item.wattage}W ${item.form_factor}`,
+        getManufacturer: (item) => normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+        getSpecs: (item) => [
+          { label: 'Мощность', value: `${item.wattage || '?'} W` },
+          { label: 'Форм-фактор', value: item.form_factor || '?' },
+          { label: 'Сертификат', value: item.efficiency_rating || '?' },
+          { label: 'Модульность', value: item.modular || '?' }
+        ],
+        getFilterValues: (item) => ({
+          manufacturer: normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+          wattage: item.wattage,
+          form_factor: item.form_factor,
+          efficiency: item.efficiency_rating,
+          modular: item.modular
+        }),
+        getFilterConfig: () => ({
+          manufacturers: { type: 'checkbox', label: 'Производитель' },
+          wattage: { type: 'checkbox', label: 'Мощность (W)', options: [300, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 1000, 1200, 1500] },
+          efficiency: { type: 'checkbox', label: 'Сертификат', options: ['80+', '80+ Bronze', '80+ Silver', '80+ Gold', '80+ Platinum', '80+ Titanium'] },
+          modular: { type: 'checkbox', label: 'Модульность', options: ['Non-Modular', 'Semi-Modular', 'Full-Modular'] },
+          form_factors: { type: 'checkbox', label: 'Форм-фактор', options: ['ATX', 'SFX', 'SFX-L', 'TFX', 'Flex ATX'] }
+        })
+      },
+      case: {
+        name: 'Корпуса',
+        file: 'all Case.json',
+        dataKey: 'cases',
+        getId: (item) => item.opendb_id,
+        getName: (item) => item.metadata?.name || item.name,
+        getManufacturer: (item) => normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+        getSpecs: (item) => [
+          { label: 'Тип', value: item.form_factor || '?' },
+          { label: 'Макс. длина GPU', value: `${item.max_video_card_length || '?'} mm` },
+          { label: 'Высота кулера', value: `${item.max_cpu_cooler_height || '?'} mm` },
+          { label: '3.5" отсеки', value: `${item.internal_3_5_bays || '?'}` }
+        ],
+        getFilterValues: (item) => ({
+          manufacturer: normalizeManufacturer(item.metadata?.manufacturer || item.manufacturer),
+          form_factor: item.form_factor,
+          color: item.color?.[0],
+          side_panel: item.side_panel,
+          has_transparent_panel: item.has_transparent_side_panel
+        }),
+        getFilterConfig: () => ({
+          manufacturers: { type: 'checkbox', label: 'Производитель' },
+          form_factors: { type: 'checkbox', label: 'Тип корпуса', options: ['ATX Full Tower', 'ATX Mid Tower', 'Micro ATX Mini Tower', 'Mini ITX', 'HTPC', 'Desktop'] },
+          colors: { type: 'checkbox', label: 'Цвет', options: ['BLACK', 'WHITE', 'SILVER', 'GREY', 'RED', 'BLUE'] },
+          side_panel: { type: 'checkbox', label: 'Боковая панель', options: ['Solid', 'Tempered Glass', 'Acrylic'] }
+        })
+      }
+    };
+
+    let allProducts = [];
+    let filteredProducts = [];
+    let currentCategory = 'gpu';
+    let currentPage = 1;
+    let itemsPerPage = 24;
+    let totalPages = 1;
+    
+    let compareList = JSON.parse(localStorage.getItem('iron_compare_list') || '[]');
+
+    // ==================== ФУНКЦИИ СРАВНЕНИЯ ====================
+    window.openCompareModal = function() {
+      const modal = document.getElementById('compare-modal');
+      const body = document.getElementById('compare-modal-body');
+      if (compareList.length === 0) {
+        body.innerHTML = '<div class="empty-compare">Нет товаров для сравнения</div>';
+      } else {
+        body.innerHTML = compareList.map(item => `
+          <div class="compare-list-item">
+            <div class="compare-item-info">
+              <div class="compare-item-name">${escapeHtml(item.name.substring(0, 50))}${item.name.length > 50 ? '...' : ''}</div>
+              <div class="compare-item-category">${CATEGORIES[item.category]?.name || item.category}</div>
+            </div>
+            <button class="remove-item-btn" onclick="removeFromCompare('${item.id}', event)">Удалить</button>
+          </div>
+        `).join('');
+      }
+      modal.classList.add('active');
+    };
+
+    window.closeCompareModal = function() {
+      document.getElementById('compare-modal').classList.remove('active');
+    };
+
+    window.removeFromCompare = function(id, event) {
+      if (event) event.stopPropagation();
+      compareList = compareList.filter(item => item.id !== id);
+      localStorage.setItem('iron_compare_list', JSON.stringify(compareList));
+      updateCompareBar();
+      openCompareModal();
+    };
+
+    window.goToComparePage = function() {
+      if (compareList.length < 2) {
+        alert('Добавьте минимум 2 товара для сравнения');
+        return;
+      }
+      window.location.href = `compare.html?ids=${compareList.map(item => `${item.category}:${item.id}`).join(',')}`;
+    };
+
+    window.goToCompare = function() {
+      if (compareList.length < 2) {
+        alert('Добавьте минимум 2 товара для сравнения');
+        return;
+      }
+      window.location.href = `compare.html?ids=${compareList.map(item => `${item.category}:${item.id}`).join(',')}`;
+    };
+
+    function updateCompareBar() {
+      const bar = document.getElementById('compare-bar');
+      const countSpan = document.getElementById('compare-count');
+      if (compareList.length > 0) {
+        bar.style.display = 'flex';
+        countSpan.textContent = compareList.length;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    window.addToCompare = function(id, name, category, event) {
+      if (event) event.stopPropagation();
+      if (compareList.length > 0 && compareList[0].category !== category) {
+        alert(`Нельзя сравнивать товары из разных категорий! У вас уже есть ${CATEGORIES[compareList[0].category]?.name} в списке.`);
+        return;
+      }
+      if (compareList.some(item => item.id === id)) {
+        alert(`${name} уже в списке сравнения`);
+        return;
+      }
+      if (compareList.length >= 4) {
+        alert('Можно сравнивать не более 4 товаров одновременно');
+        return;
+      }
+      compareList.push({ id, name, category });
+      localStorage.setItem('iron_compare_list', JSON.stringify(compareList));
+      updateCompareBar();
+      alert(`${name} добавлен в сравнение`);
+    };
+
+    // ==================== СОХРАНЕНИЕ СОСТОЯНИЯ ====================
+    function saveCategoryState() {
+      localStorage.setItem('iron_last_category', currentCategory);
+      localStorage.setItem('iron_last_page', currentPage);
+      localStorage.setItem('iron_scroll_position', window.scrollY);
+    }
+
+    function restoreCategoryState() {
+      const savedCategory = localStorage.getItem('iron_last_category');
+      const savedPage = parseInt(localStorage.getItem('iron_last_page')) || 1;
+      const savedScroll = parseInt(localStorage.getItem('iron_scroll_position')) || 0;
+      if (savedCategory && CATEGORIES[savedCategory]) {
+        return { category: savedCategory, page: savedPage, scroll: savedScroll };
+      }
+      return { category: 'gpu', page: 1, scroll: 0 };
+    }
+
+    function getCategoryFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      const category = params.get('category');
+      if (category && CATEGORIES[category]) return category;
+      return null;
+    }
+
+    // ==================== ЗАГРУЗКА ДАННЫХ ====================
+    async function loadCategory(category) {
+      const config = CATEGORIES[category];
+      if (!config) return [];
+      try {
+        const response = await fetch(config.file);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const products = data[config.dataKey] || (Array.isArray(data) ? data : []);
+        products.forEach(p => p._category = category);
+        console.log(`Загружено ${products.length} ${config.name.toLowerCase()}`);
+        return products;
+      } catch (error) {
+        console.error(`Ошибка загрузки ${config.file}:`, error);
+        return [];
+      }
+    }
+
+    // ==================== ФИЛЬТРЫ ====================
+    function createFilterGroup(title, items, filterClass) {
+      if (!items || items.length === 0) return '';
+      const sortedItems = [...items].sort((a, b) => {
+        if (typeof a === 'number') return a - b;
+        return a.localeCompare(b);
+      });
+      const groupId = title.replace(/\s/g, '_');
+      let html = `<div class="filter-group" id="group_${groupId}">`;
+      html += `<div class="filter-toggle" onclick="toggleFilterGroup('${groupId}')">`;
+      html += `<h4>${title}</h4>`;
+      html += `<span class="filter-arrow">▼</span>`;
+      html += `</div>`;
+      html += `<div class="filter-options">`;
+      html += `<input type="text" class="filter-search" placeholder="Поиск..." oninput="filterSearchOptions('${groupId}', this.value)">`;
+      for (const item of sortedItems) {
+        html += `<div class="filter-option searchable-option" data-value="${escapeHtml(item)}">
+          <input type="checkbox" value="${escapeHtml(item)}" class="${filterClass}"> <label>${escapeHtml(item)}</label>
+        </div>`;
+      }
+      html += `</div></div>`;
+      return html;
+    }
+
+    function updateDynamicFilters(products) {
+      const config = CATEGORIES[currentCategory];
+      if (!config) return;
+      const filterConfig = config.getFilterConfig();
+      const filterValues = {
+        manufacturers: new Set(),
+        chipsets: new Set(),
+        sockets: new Set(),
+        types: new Set(),
+        form_factors: new Set(),
+        memory: new Set(),
+        cores: new Set(),
+        capacity: new Set(),
+        speed: new Set(),
+        wattage: new Set(),
+        efficiency: new Set(),
+        modular: new Set(),
+        colors: new Set(),
+        side_panels: new Set()
+      };
+      products.forEach(p => {
+        const vals = config.getFilterValues(p);
+        if (vals.manufacturer) filterValues.manufacturers.add(vals.manufacturer);
+        if (vals.chipset) filterValues.chipsets.add(vals.chipset);
+        if (vals.socket) filterValues.sockets.add(vals.socket);
+        if (vals.type) filterValues.types.add(vals.type);
+        if (vals.form_factor) filterValues.form_factors.add(vals.form_factor);
+        if (vals.memory) filterValues.memory.add(vals.memory);
+        if (vals.cores) filterValues.cores.add(vals.cores);
+        if (vals.capacity) filterValues.capacity.add(vals.capacity);
+        if (vals.speed) filterValues.speed.add(vals.speed);
+        if (vals.wattage) filterValues.wattage.add(vals.wattage);
+        if (vals.efficiency) filterValues.efficiency.add(vals.efficiency);
+        if (vals.modular) filterValues.modular.add(vals.modular);
+        if (vals.color) filterValues.colors.add(vals.color);
+        if (vals.side_panel) filterValues.side_panels.add(vals.side_panel);
+      });
+      let html = '';
+      if (filterConfig.manufacturers && filterValues.manufacturers.size > 0) {
+        html += createFilterGroup('Производитель', filterValues.manufacturers, 'filter-manufacturer');
+      }
+      if (filterConfig.chipsets && filterValues.chipsets.size > 0 && currentCategory !== 'motherboard') {
+        html += createFilterGroup('Производитель чипсета', filterValues.chipsets, 'filter-chipset');
+      }
+      if (filterConfig.sockets && filterValues.sockets.size > 0) {
+        html += createFilterGroup('Сокет', filterValues.sockets, 'filter-socket');
+      }
+      if (filterConfig.chipsets && filterValues.chipsets.size > 0 && currentCategory === 'motherboard') {
+        html += createFilterGroup('Чипсет', filterValues.chipsets, 'filter-mb-chipset');
+      }
+      if (filterConfig.types && filterValues.types.size > 0) {
+        html += createFilterGroup('Тип памяти', filterValues.types, 'filter-type');
+      }
+      if (filterConfig.form_factors && filterValues.form_factors.size > 0) {
+        html += createFilterGroup('Форм-фактор', filterValues.form_factors, 'filter-formfactor');
+      }
+      if (filterConfig.memory && filterConfig.memory.options) {
+        html += createFilterGroup('Объём памяти (GB)', filterConfig.memory.options, 'filter-memory');
+      }
+      if (filterConfig.cores && filterConfig.cores.options) {
+        html += createFilterGroup('Количество ядер', filterConfig.cores.options, 'filter-cores');
+      }
+      if (filterConfig.capacity && filterConfig.capacity.options) {
+        html += createFilterGroup('Объём (GB)', filterConfig.capacity.options, 'filter-capacity');
+      }
+      if (filterConfig.speed && filterConfig.speed.options) {
+        html += createFilterGroup('Частота (MHz)', filterConfig.speed.options, 'filter-speed');
+      }
+      if (filterConfig.wattage && filterConfig.wattage.options) {
+        html += createFilterGroup('Мощность (W)', filterConfig.wattage.options, 'filter-wattage');
+      }
+      if (filterConfig.efficiency && filterConfig.efficiency.options) {
+        html += createFilterGroup('Сертификат', filterConfig.efficiency.options, 'filter-efficiency');
+      }
+      if (filterConfig.modular && filterConfig.modular.options) {
+        html += createFilterGroup('Модульность', filterConfig.modular.options, 'filter-modular');
+      }
+      if (filterConfig.colors && filterConfig.colors.options) {
+        html += createFilterGroup('Цвет', filterConfig.colors.options, 'filter-color');
+      }
+      if (filterConfig.side_panel && filterConfig.side_panel.options) {
+        html += createFilterGroup('Боковая панель', filterConfig.side_panel.options, 'filter-side-panel');
+      }
+      document.getElementById('dynamic-filters').innerHTML = html || '<div class="filter-group"><div class="not-available">Нет доступных фильтров</div></div>';
+      attachFilterListeners();
+    }
+
+    window.filterSearchOptions = function(groupId, searchText) {
+      const group = document.getElementById(`group_${groupId}`);
+      if (!group) return;
+      const options = group.querySelectorAll('.searchable-option');
+      const lowerSearch = searchText.toLowerCase();
+      options.forEach(opt => {
+        const text = opt.querySelector('label')?.textContent.toLowerCase() || '';
+        opt.style.display = text.includes(lowerSearch) ? 'flex' : 'none';
+      });
+    };
+
+    window.toggleFilterGroup = function(groupId) {
+      const group = document.getElementById(`group_${groupId}`);
+      if (group) group.classList.toggle('collapsed');
+    };
+
+    function attachFilterListeners() {
+      const selectors = '.filter-manufacturer, .filter-chipset, .filter-socket, .filter-mb-chipset, .filter-type, .filter-formfactor, .filter-memory, .filter-cores, .filter-capacity, .filter-speed, .filter-wattage, .filter-efficiency, .filter-modular, .filter-color, .filter-side-panel';
+      document.querySelectorAll(selectors).forEach(input => {
+        input.removeEventListener('change', onFilterChange);
+        input.addEventListener('change', onFilterChange);
+      });
+    }
+
+    function onFilterChange() {
+      currentPage = 1;
+      filterAndSort();
+    }
+
+    function escapeHtml(text) {
+      if (!text && text !== 0) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function escapeForOnClick(text) {
+      if (!text) return '';
+      return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // ==================== ОТОБРАЖЕНИЕ ТОВАРОВ ====================
+    function renderProducts() {
+      const grid = document.getElementById('products-grid');
+      const start = (currentPage - 1) * itemsPerPage;
+      const productsToShow = filteredProducts.slice(start, start + itemsPerPage);
+      const config = CATEGORIES[currentCategory];
+      if (!productsToShow.length) {
+        grid.innerHTML = '<div class="no-results">Товары не найдены</div>';
+        return;
+      }
+      grid.innerHTML = productsToShow.map(product => {
+        const displayName = config.getName(product);
+        const shortName = displayName.length > 65 ? displayName.substring(0, 65) + '...' : displayName;
+        const manufacturer = config.getManufacturer(product) || 'Unknown';
+        const specs = config.getSpecs(product);
+        const productId = config.getId(product);
+        return `
+          <div class="product-card" onclick="window.location.href='product.html?category=${currentCategory}&id=${productId}'" onmouseenter="window.updateHoveredCard?.(this)" onmouseleave="window.updateHoveredCard?.(null)">
+            <div class="product-header"><span class="product-manufacturer">${escapeHtml(manufacturer)}</span></div>
+            <div class="product-name">${escapeHtml(shortName)}</div>
+            <div class="specs-list">
+              ${specs.map(s => `<span>${s.label}: ${escapeHtml(String(s.value))}</span>`).join('')}
+            </div>
+            <div class="product-footer">
+              <button class="btn-compare" onclick="addToCompare('${productId}', '${escapeForOnClick(displayName)}', '${currentCategory}', event)">Сравнить</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      updateResultsInfo();
+      renderPagination();
+    }
+
+    function updateResultsInfo() {
+      const info = document.getElementById('results-info');
+      const config = CATEGORIES[currentCategory];
+      if (!filteredProducts.length) info.textContent = `Найдено: 0 ${config.name.toLowerCase()}`;
+      else info.textContent = `Показано ${(currentPage-1)*itemsPerPage+1}-${Math.min(currentPage*itemsPerPage, filteredProducts.length)} из ${filteredProducts.length} ${config.name.toLowerCase()}`;
+    }
+
+    function renderPagination() {
+      const container = document.getElementById('pagination');
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+      let html = `<button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage===1 ? 'disabled' : ''}>←</button>`;
+      if (currentPage > 3) html += `<button class="page-btn" onclick="goToPage(1)">1</button>${currentPage > 4 ? '<span class="page-info">...</span>' : ''}`;
+      for (let i = Math.max(1, currentPage-2); i <= Math.min(totalPages, currentPage+2); i++)
+        html += `<button class="page-btn ${i===currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      if (currentPage < totalPages-2) html += `${currentPage < totalPages-3 ? '<span class="page-info">...</span>' : ''}<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+      html += `<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage===totalPages ? 'disabled' : ''}>→</button>`;
+      container.innerHTML = html;
+    }
+
+    window.goToPage = function(page) {
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderProducts();
+      document.querySelector('.products-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      saveCategoryState();
+    };
+
+    function updatePagination() {
+      totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+      if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+      renderProducts();
+    }
+
+    // ==================== ФИЛЬТРАЦИЯ ====================
+    function filterAndSort() {
+      let filtered = [...allProducts];
+      const config = CATEGORIES[currentCategory];
+      const selectedManufacturers = Array.from(document.querySelectorAll('.filter-manufacturer:checked')).map(cb => cb.value);
+      if (selectedManufacturers.length) filtered = filtered.filter(p => selectedManufacturers.includes(config.getManufacturer(p)));
+      const selectedChipsets = Array.from(document.querySelectorAll('.filter-chipset:checked')).map(cb => cb.value);
+      if (selectedChipsets.length) filtered = filtered.filter(p => selectedChipsets.includes(p.chipset_manufacturer));
+      const selectedSockets = Array.from(document.querySelectorAll('.filter-socket:checked')).map(cb => cb.value);
+      if (selectedSockets.length) filtered = filtered.filter(p => selectedSockets.includes(p.socket));
+      const selectedMbChipsets = Array.from(document.querySelectorAll('.filter-mb-chipset:checked')).map(cb => cb.value);
+      if (selectedMbChipsets.length) filtered = filtered.filter(p => selectedMbChipsets.includes(p.chipset));
+      const selectedTypes = Array.from(document.querySelectorAll('.filter-type:checked')).map(cb => cb.value);
+      if (selectedTypes.length) filtered = filtered.filter(p => selectedTypes.includes(p.ram_type || p.type || p.storage_type));
+      const selectedFormFactors = Array.from(document.querySelectorAll('.filter-formfactor:checked')).map(cb => cb.value);
+      if (selectedFormFactors.length) filtered = filtered.filter(p => selectedFormFactors.includes(p.form_factor));
+      const selectedMemory = Array.from(document.querySelectorAll('.filter-memory:checked')).map(cb => parseInt(cb.value));
+      if (selectedMemory.length) filtered = filtered.filter(p => selectedMemory.includes(p.memory));
+      const selectedCores = Array.from(document.querySelectorAll('.filter-cores:checked')).map(cb => parseInt(cb.value));
+      if (selectedCores.length) filtered = filtered.filter(p => selectedCores.includes(p.cores?.total || p.cores));
+      const selectedCapacity = Array.from(document.querySelectorAll('.filter-capacity:checked')).map(cb => parseInt(cb.value));
+      if (selectedCapacity.length) filtered = filtered.filter(p => selectedCapacity.includes(p.capacity || (p.modules?.capacity_gb ? p.modules.quantity * p.modules.capacity_gb : null)));
+      const selectedSpeed = Array.from(document.querySelectorAll('.filter-speed:checked')).map(cb => parseInt(cb.value));
+      if (selectedSpeed.length) filtered = filtered.filter(p => selectedSpeed.includes(p.speed));
+      const selectedWattage = Array.from(document.querySelectorAll('.filter-wattage:checked')).map(cb => parseInt(cb.value));
+      if (selectedWattage.length) filtered = filtered.filter(p => selectedWattage.includes(p.wattage));
+      const selectedEfficiency = Array.from(document.querySelectorAll('.filter-efficiency:checked')).map(cb => cb.value);
+      if (selectedEfficiency.length) filtered = filtered.filter(p => selectedEfficiency.includes(p.efficiency_rating));
+      const selectedModular = Array.from(document.querySelectorAll('.filter-modular:checked')).map(cb => cb.value);
+      if (selectedModular.length) filtered = filtered.filter(p => selectedModular.includes(p.modular));
+      const selectedColors = Array.from(document.querySelectorAll('.filter-color:checked')).map(cb => cb.value);
+      if (selectedColors.length) filtered = filtered.filter(p => selectedColors.includes(p.color?.[0]));
+      const selectedSidePanels = Array.from(document.querySelectorAll('.filter-side-panel:checked')).map(cb => cb.value);
+      if (selectedSidePanels.length) filtered = filtered.filter(p => selectedSidePanels.includes(p.side_panel));
+      filteredProducts = filtered;
+      updatePagination();
+      saveCategoryState();
+    }
+
+    function resetFilters() {
+      const selectors = '.filter-manufacturer, .filter-chipset, .filter-socket, .filter-mb-chipset, .filter-type, .filter-formfactor, .filter-memory, .filter-cores, .filter-capacity, .filter-speed, .filter-wattage, .filter-efficiency, .filter-modular, .filter-color, .filter-side-panel';
+      document.querySelectorAll(selectors).forEach(cb => cb.checked = false);
+      document.getElementById('per-page').value = '24';
+      itemsPerPage = 24;
+      currentPage = 1;
+      filterAndSort();
+    }
+
+    // ==================== ПЕРЕКЛЮЧЕНИЕ КАТЕГОРИЙ ====================
+    async function switchCategory(category) {
+      if (category === currentCategory) return;
+      currentCategory = category;
+      currentPage = 1;
+      const url = new URL(window.location);
+      url.searchParams.set('category', category);
+      window.history.pushState({}, '', url);
+      const radio = document.getElementById(`cat-${category}`);
+      if (radio) radio.checked = true;
+      document.getElementById('products-grid').innerHTML = '<div class="no-results">Загрузка данных...</div>';
+      allProducts = await loadCategory(category);
+      updateDynamicFilters(allProducts);
+      filterAndSort();
+      saveCategoryState();
+    }
+
+    function attachCategoryListeners() {
+      document.querySelectorAll('input[name="category"]').forEach(radio => {
+        radio.addEventListener('change', (e) => { if (e.target.checked) switchCategory(e.target.value); });
+      });
+      document.getElementById('per-page')?.addEventListener('change', (e) => { itemsPerPage = parseInt(e.target.value); currentPage = 1; filterAndSort(); });
+      document.getElementById('reset-filters')?.addEventListener('click', resetFilters);
+    }
+
+    // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+    window.addEventListener('beforeunload', () => { saveCategoryState(); });
+    document.addEventListener('click', (e) => { 
+      if (e.target === document.getElementById('compare-modal')) closeCompareModal();
+      if (e.target === document.getElementById('suggest-modal')) closeSuggestModal();
+    });
+
+    window.addEventListener('load', async () => {
+      const urlCategory = getCategoryFromURL();
+      const savedState = restoreCategoryState();
+      let targetCategory = 'gpu';
+      if (urlCategory) targetCategory = urlCategory;
+      else if (savedState.category) targetCategory = savedState.category;
+      currentCategory = targetCategory;
+      currentPage = savedState.page;
+      const radio = document.getElementById(`cat-${targetCategory}`);
+      if (radio) radio.checked = true;
+      allProducts = await loadCategory(currentCategory);
+      updateDynamicFilters(allProducts);
+      attachCategoryListeners();
+      filterAndSort();
+      if (savedState.scroll > 0) setTimeout(() => window.scrollTo({ top: savedState.scroll, behavior: 'instant' }), 100);
+      updateCompareBar();
+      
+      // Проверяем подсветку кнопки
+      checkHighlight();
+    });
+  </script>
+</body>
+</html>
