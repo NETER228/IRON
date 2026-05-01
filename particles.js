@@ -1,9 +1,10 @@
-// particles.js — система частиц с связями и поддержкой тем
+// particles.js — система частиц с поддержкой отключения
 
 let canvasElement = null;
 let ctx = null;
 let particles = [];
 let animationId = null;
+let isParticlesEnabled = true;
 
 const PARTICLE_COUNT = 85;
 const CONNECTION_DISTANCE = 120;
@@ -172,6 +173,11 @@ function clearCanvas() {
 }
 
 function animate() {
+  if (!isParticlesEnabled) {
+    animationId = requestAnimationFrame(animate);
+    return;
+  }
+  
   clearCanvas();
 
   particles.forEach(p => {
@@ -204,10 +210,47 @@ function initParticles() {
     particles.push(new Particle());
   }
 
+  if (animationId) cancelAnimationFrame(animationId);
   animate();
 }
 
+function stopParticles() {
+  if (!isParticlesEnabled) return;
+  isParticlesEnabled = false;
+  if (ctx) {
+    clearCanvas();
+  }
+}
+
+function startParticles() {
+  if (isParticlesEnabled) return;
+  isParticlesEnabled = true;
+  if (ctx) {
+    clearCanvas();
+    particles.forEach(p => p.draw());
+    drawConnections();
+  }
+}
+
+function toggleParticles() {
+  if (isParticlesEnabled) {
+    stopParticles();
+  } else {
+    startParticles();
+  }
+  updateParticlesButton();
+}
+
+function updateParticlesButton() {
+  const btn = document.getElementById('particles-toggle');
+  if (btn) {
+    btn.textContent = isParticlesEnabled ? '✨' : '💤';
+    btn.title = isParticlesEnabled ? 'Отключить анимацию частиц' : 'Включить анимацию частиц';
+  }
+}
+
 window.updateHoveredCard = function(element) {
+  if (!isParticlesEnabled) return;
   if (!element) {
     attractionStrength = 0;
     return;
@@ -221,6 +264,7 @@ window.updateHoveredCard = function(element) {
 };
 
 window.refreshParticles = function() {
+  if (!isParticlesEnabled) return;
   clearCanvas();
   if (ctx) {
     particles.forEach(p => p.draw());
@@ -228,13 +272,20 @@ window.refreshParticles = function() {
   }
 };
 
+window.toggleParticles = toggleParticles;
+
 window.addEventListener('mousemove', (e) => {
+  if (!isParticlesEnabled) return;
   mouseX = e.clientX;
   mouseY = e.clientY;
 });
 
 window.addEventListener('resize', () => {
   resizeCanvas();
+  if (!isParticlesEnabled && ctx) {
+    clearCanvas();
+    return;
+  }
   const oldWidth = canvasElement?.width || window.innerWidth;
   const oldHeight = canvasElement?.height || window.innerHeight;
   const scaleX = (canvasElement?.width || window.innerWidth) / oldWidth;
@@ -249,6 +300,7 @@ window.addEventListener('resize', () => {
 const searchInput = document.getElementById('search-input');
 if (searchInput) {
   searchInput.addEventListener('input', () => {
+    if (!isParticlesEnabled) return;
     isTyping = true;
     typingIntensity = 1.0;
     clearTimeout(window.typingTimer);
@@ -260,7 +312,11 @@ if (searchInput) {
 }
 
 const themeObserver = new MutationObserver(() => {
-  window.refreshParticles();
+  if (isParticlesEnabled) {
+    window.refreshParticles();
+  } else if (ctx) {
+    clearCanvas();
+  }
 });
 themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
