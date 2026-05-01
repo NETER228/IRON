@@ -1863,3 +1863,13 @@ html {
     font-size: 1rem;
   }
 }
+/* Кнопка управления частицами - дополнительные стили */
+#particles-toggle {
+  transition: all 0.2s ease;
+}
+
+#particles-toggle:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-cyan);
+  background: var(--bg-surface);
+}
