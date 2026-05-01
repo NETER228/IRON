@@ -4,7 +4,7 @@ let canvasElement = null;
 let ctx = null;
 let particles = [];
 let animationId = null;
-let isParticlesEnabled = true;
+window.isParticlesEnabled = true;
 
 const PARTICLE_COUNT = 85;
 const CONNECTION_DISTANCE = 120;
@@ -173,7 +173,7 @@ function clearCanvas() {
 }
 
 function animate() {
-  if (!isParticlesEnabled) {
+  if (!window.isParticlesEnabled) {
     animationId = requestAnimationFrame(animate);
     return;
   }
@@ -198,7 +198,7 @@ function animate() {
   animationId = requestAnimationFrame(animate);
 }
 
-function initParticles() {
+window.initParticles = function() {
   canvasElement = document.getElementById('canvas');
   if (!canvasElement) return;
 
@@ -212,45 +212,36 @@ function initParticles() {
 
   if (animationId) cancelAnimationFrame(animationId);
   animate();
-}
+};
 
-function stopParticles() {
-  if (!isParticlesEnabled) return;
-  isParticlesEnabled = false;
+window.stopParticles = function() {
+  if (!window.isParticlesEnabled) return;
+  window.isParticlesEnabled = false;
   if (ctx) {
     clearCanvas();
   }
-}
+};
 
-function startParticles() {
-  if (isParticlesEnabled) return;
-  isParticlesEnabled = true;
+window.startParticles = function() {
+  if (window.isParticlesEnabled) return;
+  window.isParticlesEnabled = true;
   if (ctx) {
     clearCanvas();
     particles.forEach(p => p.draw());
     drawConnections();
   }
-}
+};
 
-function toggleParticles() {
-  if (isParticlesEnabled) {
-    stopParticles();
+window.toggleParticles = function() {
+  if (window.isParticlesEnabled) {
+    window.stopParticles();
   } else {
-    startParticles();
+    window.startParticles();
   }
-  updateParticlesButton();
-}
-
-function updateParticlesButton() {
-  const btn = document.getElementById('particles-toggle');
-  if (btn) {
-    btn.textContent = isParticlesEnabled ? '✨' : '💤';
-    btn.title = isParticlesEnabled ? 'Отключить анимацию частиц' : 'Включить анимацию частиц';
-  }
-}
+};
 
 window.updateHoveredCard = function(element) {
-  if (!isParticlesEnabled) return;
+  if (!window.isParticlesEnabled) return;
   if (!element) {
     attractionStrength = 0;
     return;
@@ -264,7 +255,7 @@ window.updateHoveredCard = function(element) {
 };
 
 window.refreshParticles = function() {
-  if (!isParticlesEnabled) return;
+  if (!window.isParticlesEnabled) return;
   clearCanvas();
   if (ctx) {
     particles.forEach(p => p.draw());
@@ -272,17 +263,15 @@ window.refreshParticles = function() {
   }
 };
 
-window.toggleParticles = toggleParticles;
-
 window.addEventListener('mousemove', (e) => {
-  if (!isParticlesEnabled) return;
+  if (!window.isParticlesEnabled) return;
   mouseX = e.clientX;
   mouseY = e.clientY;
 });
 
 window.addEventListener('resize', () => {
   resizeCanvas();
-  if (!isParticlesEnabled && ctx) {
+  if (!window.isParticlesEnabled && ctx) {
     clearCanvas();
     return;
   }
@@ -300,7 +289,7 @@ window.addEventListener('resize', () => {
 const searchInput = document.getElementById('search-input');
 if (searchInput) {
   searchInput.addEventListener('input', () => {
-    if (!isParticlesEnabled) return;
+    if (!window.isParticlesEnabled) return;
     isTyping = true;
     typingIntensity = 1.0;
     clearTimeout(window.typingTimer);
@@ -312,7 +301,7 @@ if (searchInput) {
 }
 
 const themeObserver = new MutationObserver(() => {
-  if (isParticlesEnabled) {
+  if (window.isParticlesEnabled) {
     window.refreshParticles();
   } else if (ctx) {
     clearCanvas();
@@ -320,9 +309,8 @@ const themeObserver = new MutationObserver(() => {
 });
 themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-window.initParticles = initParticles;
 window.refreshBackground = window.refreshParticles;
 
 if (document.getElementById('canvas')) {
-  initParticles();
+  window.initParticles();
 }
