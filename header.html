@@ -63,65 +63,83 @@
 </header>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const toggleBtn = document.getElementById('theme-toggle');
-
-    function updateButtonText() {
-      const isDark = document.documentElement.classList.contains('dark');
-      toggleBtn.textContent = isDark ? 'Light' : 'Dark';
-    }
-
-    toggleBtn.addEventListener('click', function() {
-      const html = document.documentElement;
+  (function() {
+    // Инициализация темы
+    function initTheme() {
+      const savedTheme = localStorage.getItem('iron-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       
-      if (html.classList.contains('light')) {
-        html.classList.remove('light');
-        html.classList.add('dark');
-        localStorage.setItem('iron-theme', 'dark');
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
       } else {
-        html.classList.remove('dark');
-        html.classList.add('light');
-        localStorage.setItem('iron-theme', 'light');
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
       }
       
-      updateButtonText();
-    });
-
-    // Инициализация темы при загрузке
-    const savedTheme = localStorage.getItem('iron-theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.add('light');
+      const toggleBtn = document.getElementById('theme-toggle');
+      if (toggleBtn) {
+        const isDark = document.documentElement.classList.contains('dark');
+        toggleBtn.textContent = isDark ? 'Light' : 'Dark';
+      }
     }
     
-    updateButtonText();
-
-    // Кнопка управления частицами
+    initTheme();
+    
+    // Обработчик темы
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+      themeToggle.addEventListener('click', function() {
+        const html = document.documentElement;
+        if (html.classList.contains('light')) {
+          html.classList.remove('light');
+          html.classList.add('dark');
+          localStorage.setItem('iron-theme', 'dark');
+        } else {
+          html.classList.remove('dark');
+          html.classList.add('light');
+          localStorage.setItem('iron-theme', 'light');
+        }
+        themeToggle.textContent = html.classList.contains('dark') ? 'Light' : 'Dark';
+        
+        if (window.refreshParticles) window.refreshParticles();
+        if (window.initParticles && !window.isParticlesEnabled) window.initParticles();
+      });
+    }
+    
+    // Обработчик кнопки частиц
     const particlesToggle = document.getElementById('particles-toggle');
     if (particlesToggle) {
-      // Функция обновления состояния кнопки
-      function updateParticlesButtonState() {
+      function updateParticlesButton() {
         if (window.isParticlesEnabled !== undefined) {
           particlesToggle.textContent = window.isParticlesEnabled ? '✨' : '💤';
           particlesToggle.title = window.isParticlesEnabled ? 'Отключить анимацию частиц' : 'Включить анимацию частиц';
         }
       }
-
+      
       particlesToggle.addEventListener('click', function(e) {
         e.stopPropagation();
         if (window.toggleParticles) {
           window.toggleParticles();
-          updateParticlesButtonState();
+          setTimeout(updateParticlesButton, 50);
+        } else {
+          // fallback - напрямую меняем состояние
+          if (window.isParticlesEnabled === undefined) window.isParticlesEnabled = true;
+          window.isParticlesEnabled = !window.isParticlesEnabled;
+          updateParticlesButton();
+          if (window.isParticlesEnabled && window.initParticles) {
+            window.initParticles();
+          } else if (!window.isParticlesEnabled && window.stopParticles) {
+            window.stopParticles();
+          }
         }
       });
       
-      // Ждём инициализации particles.js
-      setTimeout(updateParticlesButtonState, 500);
+      // Обновляем кнопку после загрузки particles.js
+      setTimeout(updateParticlesButton, 200);
+      setInterval(updateParticlesButton, 1000);
     }
-  });
+  })();
 </script>
 
 <style>
