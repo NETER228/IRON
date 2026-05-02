@@ -4,7 +4,7 @@ let canvasElement = null;
 let ctx = null;
 let particles = [];
 let animationId = null;
-window.isParticlesEnabled = true;
+let particlesEnabled = true;
 
 const PARTICLE_COUNT = 85;
 const CONNECTION_DISTANCE = 120;
@@ -173,7 +173,7 @@ function clearCanvas() {
 }
 
 function animate() {
-  if (!window.isParticlesEnabled) {
+  if (!particlesEnabled) {
     animationId = requestAnimationFrame(animate);
     return;
   }
@@ -198,7 +198,7 @@ function animate() {
   animationId = requestAnimationFrame(animate);
 }
 
-window.initParticles = function() {
+function initParticles() {
   canvasElement = document.getElementById('canvas');
   if (!canvasElement) return;
 
@@ -212,36 +212,53 @@ window.initParticles = function() {
 
   if (animationId) cancelAnimationFrame(animationId);
   animate();
-};
+}
 
-window.stopParticles = function() {
-  if (!window.isParticlesEnabled) return;
-  window.isParticlesEnabled = false;
+function stopParticles() {
+  if (!particlesEnabled) return;
+  particlesEnabled = false;
   if (ctx) {
     clearCanvas();
   }
-};
+  updateParticlesButtonUI();
+}
 
-window.startParticles = function() {
-  if (window.isParticlesEnabled) return;
-  window.isParticlesEnabled = true;
+function startParticles() {
+  if (particlesEnabled) return;
+  particlesEnabled = true;
   if (ctx) {
     clearCanvas();
     particles.forEach(p => p.draw());
     drawConnections();
   }
-};
+  updateParticlesButtonUI();
+}
 
-window.toggleParticles = function() {
-  if (window.isParticlesEnabled) {
-    window.stopParticles();
+function toggleParticles() {
+  if (particlesEnabled) {
+    stopParticles();
   } else {
-    window.startParticles();
+    startParticles();
   }
-};
+}
+
+function updateParticlesButtonUI() {
+  const btn = document.getElementById('particles-toggle');
+  if (btn) {
+    btn.textContent = particlesEnabled ? '✨' : '💤';
+    btn.title = particlesEnabled ? 'Отключить анимацию частиц' : 'Включить анимацию частиц';
+  }
+}
+
+// Глобальные функции для вызова из HTML
+window.toggleParticles = toggleParticles;
+window.initParticles = initParticles;
+window.stopParticles = stopParticles;
+window.startParticles = startParticles;
+window.updateParticlesButtonUI = updateParticlesButtonUI;
 
 window.updateHoveredCard = function(element) {
-  if (!window.isParticlesEnabled) return;
+  if (!particlesEnabled) return;
   if (!element) {
     attractionStrength = 0;
     return;
@@ -255,7 +272,7 @@ window.updateHoveredCard = function(element) {
 };
 
 window.refreshParticles = function() {
-  if (!window.isParticlesEnabled) return;
+  if (!particlesEnabled) return;
   clearCanvas();
   if (ctx) {
     particles.forEach(p => p.draw());
@@ -264,14 +281,14 @@ window.refreshParticles = function() {
 };
 
 window.addEventListener('mousemove', (e) => {
-  if (!window.isParticlesEnabled) return;
+  if (!particlesEnabled) return;
   mouseX = e.clientX;
   mouseY = e.clientY;
 });
 
 window.addEventListener('resize', () => {
   resizeCanvas();
-  if (!window.isParticlesEnabled && ctx) {
+  if (!particlesEnabled && ctx) {
     clearCanvas();
     return;
   }
@@ -289,7 +306,7 @@ window.addEventListener('resize', () => {
 const searchInput = document.getElementById('search-input');
 if (searchInput) {
   searchInput.addEventListener('input', () => {
-    if (!window.isParticlesEnabled) return;
+    if (!particlesEnabled) return;
     isTyping = true;
     typingIntensity = 1.0;
     clearTimeout(window.typingTimer);
@@ -301,7 +318,7 @@ if (searchInput) {
 }
 
 const themeObserver = new MutationObserver(() => {
-  if (window.isParticlesEnabled) {
+  if (particlesEnabled) {
     window.refreshParticles();
   } else if (ctx) {
     clearCanvas();
@@ -312,5 +329,38 @@ themeObserver.observe(document.documentElement, { attributes: true, attributeFil
 window.refreshBackground = window.refreshParticles;
 
 if (document.getElementById('canvas')) {
-  window.initParticles();
+  initParticles();
+  setTimeout(updateParticlesButtonUI, 100);
 }
+// Простое переключение canvas
+window.toggleParticlesSimple = function () {
+
+    const canvas = document.getElementById('canvas');
+    const button = document.getElementById('particles-toggle');
+
+    if (!canvas) {
+        console.error('Canvas не найден');
+        return;
+    }
+
+    if (canvas.style.display === 'none') {
+
+        canvas.style.display = 'block';
+
+        if (button) {
+            button.innerHTML = '✨';
+        }
+
+        console.log('Частицы включены');
+
+    } else {
+
+        canvas.style.display = 'none';
+
+        if (button) {
+            button.innerHTML = '💤';
+        }
+
+        console.log('Частицы выключены');
+    }
+};
