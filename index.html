@@ -4,133 +4,176 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/png" href="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/fav.jpg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IRON — Интерактивная база компьютерного железа</title>
+  
+  <title>IRON — Интерактивная база компьютерного железа: каталог и сравнение</title>
+  <meta name="description" content="IRON — открытая база компьютерного железа. Видеокарты, процессоры, материнские платы, ОЗУ, SSD. Сравнение характеристик, поиск и подбор комплектующих для ПК.">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="IRON — Интерактивная база компьютерного железа">
+  <meta property="og:description" content="Открытая база комплектующих для ПК. Видеокарты, процессоры, материнские платы. Сравнение, поиск, подбор.">
+  <meta property="og:image" content="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/LOGO.png">
+  <meta property="og:url" content="https://iron-project.ru/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ru_RU">
+  
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="IRON — база компьютерного железа">
+  <meta name="twitter:description" content="Открытая база комплектующих для ПК. Сравнение характеристик и подбор.">
+  <meta name="twitter:image" content="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/LOGO.png">
+  
   <link rel="stylesheet" href="main.css">
+  
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "IRON",
+    "description": "Интерактивная Российская Онлайн-база компьютерного железа",
+    "url": "https://iron-project.ru/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://iron-project.ru/catalog.html?search={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
 </head>
 <body>
 
-  <div id="header-container"></div>
-  <canvas id="canvas" class="hero-bg"></canvas>
+  <header id="header-container"></header>
+  <canvas id="canvas" class="hero-bg" aria-hidden="true"></canvas>
 
-  <section class="hero-section">
-    <div class="hero-container">
-      
-      <div class="logo-wrapper">
-        <img id="logo-dark" 
-             src="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/LOGO.png" 
-             alt="IRON" 
-             class="iron-logo iron-logo-dark">
+  <main>
+    <section class="hero-section" aria-label="Главный экран">
+      <div class="hero-container">
         
-        <img id="logo-light" 
-             src="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/LOGO2.png" 
-             alt="IRON" 
-             class="iron-logo iron-logo-light">
-        
-        <div id="fallback-logo" class="fallback-logo" style="display: none;">
-          <h1 class="fallback-title"><span class="iron-text">IRON</span></h1>
-        </div>
-      </div>
-
-      <p class="hero-slogan">Интерактивная Российская Онлайн-база Железа</p>
-
-      <!-- Поиск с выпадающим списком -->
-      <div class="search-wrapper">
-        <div class="search-container">
-          <input 
-            id="search-input" 
-            type="text" 
-            placeholder="Поиск видеокарт, процессоров, материнских плат..." 
-            class="search-input"
-            autocomplete="off">
-          <div class="search-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+        <div class="logo-wrapper">
+          <img id="logo-dark" 
+               src="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/LOGO.png" 
+               alt="IRON — логотип базы компьютерного железа" 
+               title="IRON — интерактивная база компьютерного железа"
+               width="400" height="120"
+               loading="eager"
+               class="iron-logo iron-logo-dark">
+          
+          <img id="logo-light" 
+               src="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/LOGO2.png" 
+               alt="IRON — логотип базы компьютерного железа (светлая тема)" 
+               title="IRON — интерактивная база компьютерного железа"
+               width="400" height="120"
+               loading="eager"
+               class="iron-logo iron-logo-light">
+          
+          <div id="fallback-logo" class="fallback-logo" style="display: none;">
+            <h1 class="fallback-title"><span class="iron-text">IRON</span></h1>
           </div>
         </div>
-        
-        <div id="search-results" class="search-results-dropdown"></div>
 
-        <div class="search-tags">
-          <span class="search-tag" data-query="RTX 5090">RTX 5090</span>
-          <span class="search-tag" data-query="RX 9070 XT">RX 9070 XT</span>
-          <span class="search-tag" data-query="Ryzen 9 9950X">Ryzen 9 9950X</span>
-          <span class="search-tag" data-query="DDR5-6400">DDR5-6400</span>
-        </div>
-      </div>
-    </div>
+        <h1 class="hero-slogan">Интерактивная Российская Онлайн-база Железа</h1>
 
-    <div class="scroll-hint">
-      <span>Прокрутите вниз</span>
-      <div class="scroll-hint-icon">
-        <div class="scroll-hint-dot"></div>
-      </div>
-    </div>
-  </section>
+        <!-- Поиск с выпадающим списком -->
+        <div class="search-wrapper">
+          <div class="search-container">
+            <input 
+              id="search-input" 
+              type="text" 
+              placeholder="Поиск видеокарт, процессоров, материнских плат..." 
+              class="search-input"
+              autocomplete="off"
+              aria-label="Поиск комплектующих">
+            <div class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+          </div>
+          
+          <div id="search-results" class="search-results-dropdown" role="listbox"></div>
 
-  <!-- О проекте - добавлен id="about-project" для якоря -->
-  <section class="about-section" id="about-project">
-    <div class="about-container">
-      <div class="about-header">
-        <div class="about-badge">Студенческий проект</div>
-        <h2 class="about-title">О проекте IRON</h2>
-        <p class="about-description">
-          Мы создаём открытую базу компьютерного железа, где каждый сможет 
-          найти актуальную информацию о компонентах, сравнить характеристики 
-          и принять взвешенное решение при выборе комплектующих для своего ПК.
-        </p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-number" id="total-products-count">0</div>
-          <div class="stat-label">товаров в базе</div>
-          <div class="stat-desc">Видеокарты, процессоры и другие компоненты</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="categories-count">0</div>
-          <div class="stat-label">категорий</div>
-          <div class="stat-desc">GPU • CPU • Материнские платы • RAM • PSU • Storage • Case</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="open-source-count">0</div>
-          <div class="stat-label">свободный доступ</div>
-          <div class="stat-desc">Исходный код доступен на GitHub</div>
+          <div class="search-tags">
+            <span class="search-tag" data-query="RTX 5090" role="button" tabindex="0">RTX 5090</span>
+            <span class="search-tag" data-query="RX 9070 XT" role="button" tabindex="0">RX 9070 XT</span>
+            <span class="search-tag" data-query="Ryzen 9 9950X" role="button" tabindex="0">Ryzen 9 9950X</span>
+            <span class="search-tag" data-query="DDR5-6400" role="button" tabindex="0">DDR5-6400</span>
+          </div>
         </div>
       </div>
 
-      <div class="cards-grid">
-        <div class="card">
-          <div class="card-number">01</div>
-          <h3 class="card-title">Наша миссия</h3>
-          <p class="card-text">Создать независимую и объективную базу данных компьютерного железа для российского потребителя.</p>
-        </div>
-        <div class="card">
-          <div class="card-number">02</div>
-          <h3 class="card-title">Планы развития</h3>
-          <p class="card-text">Интеграция с российскими магазинами, система отзывов, AI-помощник по подбору комплектующих.</p>
-        </div>
-        <div class="card">
-          <div class="card-number">03</div>
-          <h3 class="card-title">Технологии</h3>
-          <p class="card-text">Современный стек: HTML5, CSS3, Vanilla JavaScript.</p>
-        </div>
-        <div class="card">
-          <div class="card-number">04</div>
-          <h3 class="card-title">Присоединиться</h3>
-          <p class="card-text">Проект открыт для сотрудничества!</p>
+      <div class="scroll-hint">
+        <span>Прокрутите вниз</span>
+        <div class="scroll-hint-icon" aria-hidden="true">
+          <div class="scroll-hint-dot"></div>
         </div>
       </div>
+    </section>
 
-      <div class="about-actions">
-        <a href="catalog.html" class="btn-primary">Перейти в каталог</a>
-        <a href="https://github.com/NETER228/IRON" target="_blank" class="btn-secondary">GitHub проекта →</a>
+    <!-- О проекте -->
+    <section class="about-section" id="about-project" aria-labelledby="about-title">
+      <div class="about-container">
+        <div class="about-header">
+          <div class="about-badge">Студенческий проект</div>
+          <h2 class="about-title" id="about-title">О проекте IRON</h2>
+          <p class="about-description">
+            Мы создаём открытую базу компьютерного железа, где каждый сможет 
+            найти актуальную информацию о компонентах, сравнить характеристики 
+            и принять взвешенное решение при выборе комплектующих для своего ПК.
+          </p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="total-products-count">0</div>
+            <div class="stat-label">товаров в базе</div>
+            <div class="stat-desc">Видеокарты, процессоры и другие компоненты</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="categories-count">0</div>
+            <div class="stat-label">категорий</div>
+            <div class="stat-desc">GPU • CPU • Материнские платы • RAM • PSU • Storage • Case</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="open-source-count">0</div>
+            <div class="stat-label">свободный доступ</div>
+            <div class="stat-desc">Исходный код доступен на GitHub</div>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <article class="card">
+            <div class="card-number">01</div>
+            <h3 class="card-title">Наша миссия</h3>
+            <p class="card-text">Создать независимую и объективную базу данных компьютерного железа для российского потребителя.</p>
+          </article>
+          <article class="card">
+            <div class="card-number">02</div>
+            <h3 class="card-title">Планы развития</h3>
+            <p class="card-text">Интеграция с российскими магазинами, система отзывов, AI-помощник по подбору комплектующих.</p>
+          </article>
+          <article class="card">
+            <div class="card-number">03</div>
+            <h3 class="card-title">Технологии</h3>
+            <p class="card-text">Современный стек: HTML5, CSS3, Vanilla JavaScript.</p>
+          </article>
+          <article class="card">
+            <div class="card-number">04</div>
+            <h3 class="card-title">Присоединиться</h3>
+            <p class="card-text">Проект открыт для сотрудничества!</p>
+          </article>
+        </div>
+
+        <div class="about-actions">
+          <a href="catalog.html" class="btn-primary" title="Перейти в каталог компьютерного железа">Перейти в каталог</a>
+          <a href="https://github.com/NETER228/IRON" target="_blank" rel="noopener noreferrer" class="btn-secondary" title="GitHub проекта IRON">GitHub проекта →</a>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
-  <div id="footer-container"></div>
+  <footer id="footer-container"></footer>
 
   <script src="components.js"></script>
   <script src="particles.js"></script>
@@ -148,34 +191,21 @@
       if (animationStarted) return;
       animationStarted = true;
       
-      // Анимируем статистические карточки
       const statCards = document.querySelectorAll('.stat-card');
-      statCards.forEach(card => {
-        card.classList.add('animated');
-      });
+      statCards.forEach(card => card.classList.add('animated'));
       
-      // Анимируем карточки миссии
       const missionCards = document.querySelectorAll('.card');
-      missionCards.forEach(card => {
-        card.classList.add('animated');
-      });
+      missionCards.forEach(card => card.classList.add('animated'));
       
-      // Запускаем счетчики ТОЛЬКО ПОСЛЕ того как данные загружены
       if (totalProductsCount > 0) {
         animateNumber(document.getElementById('total-products-count'), 0, totalProductsCount, 1000);
       }
       
-      // Анимация для категорий (всегда 7)
       const categoriesElement = document.getElementById('categories-count');
-      if (categoriesElement) {
-        animateSeven(categoriesElement);
-      }
+      if (categoriesElement) animateSeven(categoriesElement);
       
-      // Анимация для Open Source
       const openSourceElement = document.getElementById('open-source-count');
-      if (openSourceElement) {
-        animateOpenSource(openSourceElement);
-      }
+      if (openSourceElement) animateOpenSource(openSourceElement);
     }
 
     function animateNumber(element, start, end, duration) {
@@ -187,24 +217,17 @@
         const progress = Math.min(elapsed / duration, 1);
         const current = Math.floor(start + (end - start) * easeOutQuad(progress));
         element.textContent = current.toLocaleString();
-        
-        if (progress < 1) {
-          requestAnimationFrame(update);
-        }
+        if (progress < 1) requestAnimationFrame(update);
       }
-      
       requestAnimationFrame(update);
     }
     
-    function easeOutQuad(t) {
-      return t * (2 - t);
-    }
+    function easeOutQuad(t) { return t * (2 - t); }
     
     function animateSeven(element) {
       if (!element) return;
       const chars = ['0', '1', '2', '3', '4', '5', '6', '7'];
       let index = 0;
-      
       const interval = setInterval(() => {
         element.textContent = chars[index % chars.length];
         index++;
@@ -220,17 +243,13 @@
       const text = 'Open Source';
       let index = 0;
       element.textContent = '';
-      
       const interval = setInterval(() => {
         element.textContent = text.substring(0, index + 1);
         index++;
-        if (index === text.length) {
-          clearInterval(interval);
-        }
+        if (index === text.length) clearInterval(interval);
       }, 80);
     }
 
-    // ==================== ФУНКЦИЯ ДЛЯ ПЕРЕХОДА В КАТАЛОГ ====================
     function goToCatalogWithSuggest() {
       window.location.href = 'catalog.html?highlight=suggest';
     }
@@ -238,7 +257,6 @@
     // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadAllSearchData() {
       if (isSearchDataLoaded) return;
-
 
       const files = [
         { file: "all GPU.json",       category: "gpu",   name: "Видеокарта", dataKey: "gpus" },
@@ -257,19 +275,13 @@
             console.warn(`Файл ${item.file} не найден (${response.status})`);
             continue;
           }
-
           const data = await response.json();
           let items = [];
-
-          if (item.dataKey && data[item.dataKey]) {
-            items = data[item.dataKey];
-          } else if (Array.isArray(data)) {
-            items = data;
-          }
+          if (item.dataKey && data[item.dataKey]) items = data[item.dataKey];
+          else if (Array.isArray(data)) items = data;
 
           items.forEach(product => {
             let name = product.metadata?.name || product.name || product.chipset || product.series || "Без названия";
-            
             allSearchData.push({
               id: product.opendb_id || product.id || "unknown",
               name: name,
@@ -277,24 +289,17 @@
               categoryName: item.name
             });
           });
-
           totalProductsCount += items.length;
-
         } catch (error) {
           console.warn(`Не удалось загрузить ${item.file}:`, error.message);
         }
       }
 
-      
-      // Обновляем отображение количества товаров (без анимации, просто число)
       const totalElement = document.getElementById('total-products-count');
-      if (totalElement) {
-        totalElement.textContent = totalProductsCount.toLocaleString();
-      }
+      if (totalElement) totalElement.textContent = totalProductsCount.toLocaleString();
       
       isSearchDataLoaded = true;
       
-      // Если анимация уже запущена - запускаем счетчики
       if (animationStarted && totalProductsCount > 0) {
         animateNumber(document.getElementById('total-products-count'), 0, totalProductsCount, 1000);
       }
@@ -307,10 +312,7 @@
     function searchProducts(query) {
       if (!query || query.length < 2) return [];
       const q = query.toLowerCase().trim();
-      
-      return allSearchData
-        .filter(item => item.name.toLowerCase().includes(q))
-        .slice(0, 8);
+      return allSearchData.filter(item => item.name.toLowerCase().includes(q)).slice(0, 8);
     }
 
     function renderSearchResults(results, searchQuery) {
@@ -362,7 +364,6 @@
     function updateSearchResults() {
       const input = document.getElementById('search-input');
       if (!input) return;
-      
       const query = input.value.trim();
       lastQuery = query;
       
@@ -377,17 +378,13 @@
           container.innerHTML = `<div class="search-loading">Загрузка базы данных...</div>`;
           container.classList.add('show');
         }
-        loadAllSearchData().then(() => {
-          renderSearchResults(searchProducts(query), query);
-        });
+        loadAllSearchData().then(() => renderSearchResults(searchProducts(query), query));
       } else {
         renderSearchResults(searchProducts(query), query);
       }
     }
 
-    function handleSearchInput(e) {
-      updateSearchResults();
-    }
+    function handleSearchInput() { updateSearchResults(); }
 
     function quickSearch(query) {
       const input = document.getElementById('search-input');
@@ -421,7 +418,6 @@
       const isLight = document.documentElement.classList.contains('light');
       const darkLogo = document.getElementById('logo-dark');
       const lightLogo = document.getElementById('logo-light');
-      const fallback = document.getElementById('fallback-logo');
       
       if (darkLogo && lightLogo) {
         if (isLight) {
@@ -439,11 +435,8 @@
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       const targetTheme = savedTheme || systemTheme;
       
-      if (targetTheme === 'light') {
-        document.documentElement.classList.add('light');
-      } else {
-        document.documentElement.classList.remove('light');
-      }
+      if (targetTheme === 'light') document.documentElement.classList.add('light');
+      else document.documentElement.classList.remove('light');
       
       localStorage.setItem('iron-theme', targetTheme);
       updateLogos();
@@ -453,11 +446,8 @@
       if (window.initParticles) setTimeout(() => window.initParticles(), 100);
     }
 
-    // Наблюдатель за изменением темы
     if (!window.themeObserver) {
-      window.themeObserver = new MutationObserver(() => {
-        updateLogos();
-      });
+      window.themeObserver = new MutationObserver(() => updateLogos());
       window.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     }
 
@@ -469,11 +459,9 @@
         const windowHeight = window.innerHeight;
         
         if (rect.top < windowHeight - 100) {
-          // Данные уже загружены? Если нет - ждём
           if (isSearchDataLoaded) {
             startAnimations();
           } else {
-            // Ждём загрузки данных
             const checkDataInterval = setInterval(() => {
               if (isSearchDataLoaded) {
                 clearInterval(checkDataInterval);
@@ -493,9 +481,7 @@
       if (searchInput) {
         searchInput.addEventListener('input', handleSearchInput);
         searchInput.addEventListener('focus', () => {
-          if (searchInput.value.trim().length >= 2) {
-            updateSearchResults();
-          }
+          if (searchInput.value.trim().length >= 2) updateSearchResults();
         });
       }
 
@@ -509,33 +495,17 @@
         });
       });
 
-      // Загружаем данные для поиска
       setTimeout(() => loadAllSearchData(), 500);
-      
-      // Проверяем прокрутку при загрузке
       setTimeout(checkScrollForAnimation, 300);
-      
-      // Добавляем обработчик прокрутки
       window.addEventListener('scroll', checkScrollForAnimation);
     });
 
-    // Обработка ошибок загрузки логотипов
     const darkLogoImg = document.getElementById('logo-dark');
     const lightLogoImg = document.getElementById('logo-light');
     const fallbackDiv = document.getElementById('fallback-logo');
     
-    if (darkLogoImg) {
-      darkLogoImg.onerror = function() {
-        this.style.display = 'none';
-        if (fallbackDiv) fallbackDiv.style.display = 'block';
-      };
-    }
-    if (lightLogoImg) {
-      lightLogoImg.onerror = function() {
-        this.style.display = 'none';
-        if (fallbackDiv) fallbackDiv.style.display = 'block';
-      };
-    }
+    if (darkLogoImg) darkLogoImg.onerror = function() { this.style.display = 'none'; if (fallbackDiv) fallbackDiv.style.display = 'block'; };
+    if (lightLogoImg) lightLogoImg.onerror = function() { this.style.display = 'none'; if (fallbackDiv) fallbackDiv.style.display = 'block'; };
 
     window.quickSearch = quickSearch;
     window.goToCatalogWithSuggest = goToCatalogWithSuggest;

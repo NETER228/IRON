@@ -4,176 +4,114 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/png" href="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/fav.jpg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Каталог — IRON</title>
+
+  <title>Каталог компьютерного железа — IRON: видеокарты, процессоры, материнские платы</title>
+  <meta name="description" content="Каталог комплектующих для ПК: видеокарты, процессоры, материнские платы, оперативная память, SSD, блоки питания, корпуса. Фильтры, поиск, сравнение характеристик.">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Каталог компьютерного железа — IRON">
+  <meta property="og:description" content="Видеокарты, процессоры, материнские платы, ОЗУ, SSD, БП, корпуса. Фильтры и сравнение.">
+  <meta property="og:image" content="https://wmsocaoixfhcicczgklb.supabase.co/storage/v1/object/public/image/LOGO.png">
+  <meta property="og:url" content="https://iron-project.ru/catalog.html">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ru_RU">
+
   <link rel="stylesheet" href="main.css">
-  <style>
-    /* Дополнительный отступ сверху для контента */
-    body {
-      padding-top: 100px;
-    }
-    
-    /* Строка поиска */
-    .catalog-search {
-      margin-bottom: 1.5rem;
-      margin-top: 0.5rem;
-    }
-    .catalog-search input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      background: var(--bg-secondary);
-      border: var(--border-width) solid var(--border-color);
-      border-radius: 0.75rem;
-      color: var(--text-primary);
-      font-size: 0.9rem;
-    }
-    .catalog-search input:focus {
-      outline: none;
-      border-color: var(--accent-cyan);
-    }
-    .catalog-search input::placeholder {
-      color: var(--text-muted);
-    }
-
-    /* Красивые уведомления */
-    .notification {
-      position: fixed;
-      top: 90px;
-      right: 20px;
-      z-index: 10001;
-      padding: 1rem 1.5rem;
-      border-radius: 0.75rem;
-      background: var(--bg-secondary);
-      border: var(--border-width) solid var(--border-color);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      transform: translateX(400px);
-      transition: transform 0.3s ease;
-      max-width: 350px;
-    }
-    .notification.show {
-      transform: translateX(0);
-    }
-    .notification.success {
-      border-left: 4px solid #22c55e;
-    }
-    .notification.success .notification-icon {
-      color: #22c55e;
-    }
-    .notification.error {
-      border-left: 4px solid #ef4444;
-    }
-    .notification.error .notification-icon {
-      color: #ef4444;
-    }
-    .notification.info {
-      border-left: 4px solid var(--accent-cyan);
-    }
-    .notification.info .notification-icon {
-      color: var(--accent-cyan);
-    }
-    .notification-icon {
-      font-size: 1.25rem;
-    }
-    .notification-content {
-      flex: 1;
-    }
-    .notification-title {
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-    }
-    .notification-message {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-    .notification-close {
-      cursor: pointer;
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      transition: color 0.2s;
-    }
-    .notification-close:hover {
-      color: var(--accent-cyan);
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding-top: 140px;
-      }
-      .notification {
-        top: 80px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
-      }
-    }
-  </style>
 </head>
 <body>
 
-  <div id="header-container"></div>
-  <canvas id="canvas" class="hero-bg"></canvas>
+  <header id="header-container"></header>
+  <canvas id="canvas" class="hero-bg" aria-hidden="true"></canvas>
 
-  <div class="catalog-container">
-    <aside class="filters-sidebar">
-      <h3 style="margin-bottom: 1.5rem; font-size: 1.3rem;">Фильтры</h3>
-      
-      <div class="filter-group">
-        <h4>Категория</h4>
-        <div class="filter-option"><input type="radio" name="category" value="gpu" id="cat-gpu"><label for="cat-gpu">Видеокарты</label></div>
-        <div class="filter-option"><input type="radio" name="category" value="cpu" id="cat-cpu"><label for="cat-cpu">Процессоры</label></div>
-        <div class="filter-option"><input type="radio" name="category" value="motherboard" id="cat-mb"><label for="cat-mb">Материнские платы</label></div>
-        <div class="filter-option"><input type="radio" name="category" value="ram" id="cat-ram"><label for="cat-ram">Оперативная память</label></div>
-        <div class="filter-option"><input type="radio" name="category" value="storage" id="cat-storage"><label for="cat-storage">SSD накопители</label></div>
-        <div class="filter-option"><input type="radio" name="category" value="psu" id="cat-psu"><label for="cat-psu">Блоки питания</label></div>
-        <div class="filter-option"><input type="radio" name="category" value="case" id="cat-case"><label for="cat-case">Корпуса</label></div>
-      </div>
+  <!-- Страница каталога -->
+  <div class="catalog-page">
 
-      <div id="dynamic-filters"></div>
-      <button id="reset-filters" style="width:100%; margin-top:1rem; padding:0.6rem; background:transparent; border:var(--border-width) solid var(--border-color); border-radius:0.5rem; color:var(--text-secondary); cursor:pointer;">Сбросить фильтры</button>
-    </aside>
+    <!-- Хлебные крошки (вне сетки) -->
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <ol>
+        <li><a href="index.html" title="Главная страница IRON">Главная</a></li>
+        <li><span>Каталог</span></li>
+      </ol>
+    </nav>
 
-    <main>
-      <!-- Строка поиска по каталогу -->
-      <div class="catalog-search">
-        <input type="text" id="catalog-search-input" placeholder="Поиск по каталогу... Название товара, производитель, чипсет...">
-      </div>
+    <!-- Сетка: сайдбар + контент -->
+    <div class="catalog-container">
 
-      <div class="top-bar">
-        <div class="results-info" id="results-info">Загрузка...</div>
-        <div style="display:flex; gap:1rem;">
-          <select id="per-page" class="per-page-select">
-            <option value="12">12 на странице</option>
-            <option value="24" selected>24 на странице</option>
-            <option value="48">48 на странице</option>
-            <option value="96">96 на странице</option>
-          </select>
+      <!-- Кнопка открытия фильтров (видна на мобильных) -->
+      <button
+        type="button"
+        class="filters-toggle-btn"
+        id="filters-toggle-btn"
+        aria-expanded="false"
+        aria-controls="filters-sidebar"
+        aria-label="Открыть фильтры">
+        <span class="filters-toggle-label">⚙ Фильтры</span>
+        <span class="filters-toggle-icon" aria-hidden="true">▼</span>
+      </button>
+
+      <!-- Сайдбар с фильтрами -->
+      <aside class="filters-sidebar" id="filters-sidebar" aria-label="Фильтры товаров">
+        <h2 class="filters-title">Фильтры</h2>
+
+        <section class="filter-group">
+          <h3>Категория</h3>
+          <div class="filter-option"><input type="radio" name="category" value="gpu" id="cat-gpu"><label for="cat-gpu">Видеокарты</label></div>
+          <div class="filter-option"><input type="radio" name="category" value="cpu" id="cat-cpu"><label for="cat-cpu">Процессоры</label></div>
+          <div class="filter-option"><input type="radio" name="category" value="motherboard" id="cat-mb"><label for="cat-mb">Материнские платы</label></div>
+          <div class="filter-option"><input type="radio" name="category" value="ram" id="cat-ram"><label for="cat-ram">Оперативная память</label></div>
+          <div class="filter-option"><input type="radio" name="category" value="storage" id="cat-storage"><label for="cat-storage">SSD накопители</label></div>
+          <div class="filter-option"><input type="radio" name="category" value="psu" id="cat-psu"><label for="cat-psu">Блоки питания</label></div>
+          <div class="filter-option"><input type="radio" name="category" value="case" id="cat-case"><label for="cat-case">Корпуса</label></div>
+        </section>
+
+        <div id="dynamic-filters"></div>
+        <button id="reset-filters" class="reset-filters-btn" type="button">Сбросить фильтры</button>
+      </aside>
+
+      <!-- Контент каталога -->
+      <section class="catalog-content" aria-label="Результаты поиска">
+        <div class="catalog-search">
+          <input type="text" id="catalog-search-input" placeholder="Поиск по каталогу... Название товара, производитель, чипсет..." aria-label="Поиск по каталогу">
         </div>
-      </div>
 
-      <div class="products-grid" id="products-grid"><div class="no-results">Загрузка данных...</div></div>
-      <div class="pagination" id="pagination"></div>
-    </main>
+        <div class="top-bar">
+          <div class="results-info" id="results-info">Загрузка...</div>
+          <div class="per-page-wrapper">
+            <select id="per-page" class="per-page-select" aria-label="Количество товаров на странице">
+              <option value="12">12 на странице</option>
+              <option value="24" selected>24 на странице</option>
+              <option value="48">48 на странице</option>
+              <option value="96">96 на странице</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="products-grid" id="products-grid" role="list">
+          <div class="no-results">Загрузка данных...</div>
+        </div>
+        <nav class="pagination" id="pagination" aria-label="Пагинация"></nav>
+      </section>
+    </div>
   </div>
 
   <!-- Кнопка предложения товара -->
-  <div class="suggest-btn" id="suggest-btn" onclick="openSuggestModal()">
+  <div class="suggest-btn" id="suggest-btn" onclick="openSuggestModal()" role="button" tabindex="0">
     <span>Предложить товар</span>
   </div>
 
   <!-- Панель сравнения -->
-  <div class="compare-bar" id="compare-bar" style="display: none;" onclick="goToCompare()">
+  <div class="compare-bar" id="compare-bar" style="display: none;" onclick="goToCompare()" role="button" tabindex="0">
     <span>Сравнить</span>
     <span class="compare-count" id="compare-count">0</span>
   </div>
 
   <!-- Модальное окно сравнения -->
-  <div id="compare-modal" class="modal">
+  <div id="compare-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="compare-modal-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Сравнение товаров</h3>
-        <button class="modal-close" onclick="closeCompareModal()">✕</button>
+        <h2 id="compare-modal-title">Сравнение товаров</h2>
+        <button class="modal-close" onclick="closeCompareModal()" aria-label="Закрыть">✕</button>
       </div>
       <div class="modal-body" id="compare-modal-body">
         <div class="empty-compare">Загрузка...</div>
@@ -186,16 +124,16 @@
   </div>
 
   <!-- Модальное окно предложения товара -->
-  <div id="suggest-modal" class="modal">
+  <div id="suggest-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="suggest-modal-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Предложить товар</h3>
-        <button class="modal-close" onclick="closeSuggestModal()">✕</button>
+        <h2 id="suggest-modal-title">Предложить товар</h2>
+        <button class="modal-close" onclick="closeSuggestModal()" aria-label="Закрыть">✕</button>
       </div>
       <div class="modal-body">
         <form id="suggest-form" class="suggest-form">
           <div class="form-group">
-            <label>Категория *</label>
+            <label for="suggest-category">Категория *</label>
             <select id="suggest-category" required>
               <option value="">Выберите категорию</option>
               <option value="gpu">Видеокарта</option>
@@ -208,19 +146,19 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Название товара *</label>
+            <label for="suggest-name">Название товара *</label>
             <input type="text" id="suggest-name" placeholder="Например: NVIDIA GeForce RTX 5090" required>
           </div>
           <div class="form-group">
-            <label>Ссылка на товар *</label>
+            <label for="suggest-url">Ссылка на товар *</label>
             <input type="url" id="suggest-url" placeholder="https://example.com/product" required>
           </div>
           <div class="form-group">
-            <label>Дополнительная информация (необязательно)</label>
+            <label for="suggest-details">Дополнительная информация (необязательно)</label>
             <textarea id="suggest-details" placeholder="Характеристики, особенности, примечания..."></textarea>
           </div>
           <div class="form-group">
-            <label>Ваше имя или контакт (необязательно)</label>
+            <label for="suggest-contact">Ваше имя или контакт (необязательно)</label>
             <input type="text" id="suggest-contact" placeholder="Telegram, email...">
           </div>
           <div class="form-hint">* — обязательные поля</div>
@@ -233,7 +171,7 @@
     </div>
   </div>
 
-  <div id="footer-container"></div>
+  <footer id="footer-container"></footer>
 
   <script src="components.js"></script>
   <script src="particles.js"></script>
@@ -242,33 +180,29 @@
     // ==================== УВЕДОМЛЕНИЯ ====================
     function showNotification(title, message, type = 'info') {
       const existingNotification = document.querySelector('.notification');
-      if (existingNotification) {
-        existingNotification.remove();
-      }
-      
+      if (existingNotification) existingNotification.remove();
+
       const notification = document.createElement('div');
       notification.className = `notification ${type}`;
+      notification.setAttribute('role', 'alert');
       notification.innerHTML = `
         <div class="notification-icon">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</div>
         <div class="notification-content">
           <div class="notification-title">${title}</div>
           <div class="notification-message">${message}</div>
         </div>
-        <div class="notification-close">✕</div>
+        <div class="notification-close" role="button" tabindex="0">✕</div>
       `;
-      
+
       document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.classList.add('show');
-      }, 10);
-      
+      setTimeout(() => notification.classList.add('show'), 10);
+
       const closeBtn = notification.querySelector('.notification-close');
       closeBtn.addEventListener('click', () => {
         notification.classList.remove('show');
         setTimeout(() => notification.remove(), 300);
       });
-      
+
       setTimeout(() => {
         notification.classList.remove('show');
         setTimeout(() => notification.remove(), 300);
@@ -290,7 +224,31 @@
     let searchQuery = '';
     let searchTimeout = null;
 
-    // ==================== ПОДСВЕТКА КНОПКИ ====================
+    // ==================== ПЕРЕКЛЮЧАТЕЛЬ ФИЛЬТРОВ ====================
+    function initFiltersToggle() {
+      const toggleBtn = document.getElementById('filters-toggle-btn');
+      const sidebar = document.getElementById('filters-sidebar');
+      if (!toggleBtn || !sidebar) return;
+
+      toggleBtn.addEventListener('click', () => {
+        const isOpen = sidebar.classList.toggle('open');
+        toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        toggleBtn.setAttribute('aria-label', isOpen ? 'Закрыть фильтры' : 'Открыть фильтры');
+      });
+
+      // Автоматически закрывать фильтры при клике на "Сбросить фильтры" на мобильных
+      const resetBtn = document.getElementById('reset-filters');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          if (window.innerWidth <= 768) {
+            sidebar.classList.remove('open');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            toggleBtn.setAttribute('aria-label', 'Открыть фильтры');
+          }
+        });
+      }
+    }
+
     function checkHighlight() {
       const urlParams = new URLSearchParams(window.location.search);
       const highlight = urlParams.get('highlight');
@@ -298,17 +256,13 @@
         const suggestBtn = document.getElementById('suggest-btn');
         if (suggestBtn) {
           suggestBtn.classList.add('highlight');
-          setTimeout(() => {
-            suggestBtn.classList.remove('highlight');
-          }, 3000);
+          setTimeout(() => suggestBtn.classList.remove('highlight'), 3000);
         }
       }
     }
 
-    // ==================== ПРОВЕРКА URL ====================
     function isValidUrl(url) {
-      if (!url) return false;
-      if (url.trim() === '') return false;
+      if (!url || url.trim() === '') return false;
       const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
       if (!urlPattern.test(url)) return false;
       const hasDot = url.match(/\.(ru|com|net|org|io|me|su|рф|[a-z]{2,})/i);
@@ -318,59 +272,25 @@
       return true;
     }
 
-    // ==================== ОТПРАВКА ПРЕДЛОЖЕНИЯ ====================
     async function submitSuggestion() {
       const category = document.getElementById('suggest-category').value;
       const name = document.getElementById('suggest-name').value.trim();
       let url = document.getElementById('suggest-url').value.trim();
       const details = document.getElementById('suggest-details').value.trim();
       const contact = document.getElementById('suggest-contact').value.trim();
-      
-      if (!category) {
-        showNotification('Ошибка', 'Выберите категорию', 'error');
-        return;
-      }
-      if (!name) {
-        showNotification('Ошибка', 'Введите название товара', 'error');
-        return;
-      }
-      if (name.length < 3) {
-        showNotification('Ошибка', 'Название товара слишком короткое (минимум 3 символа)', 'error');
-        return;
-      }
-      if (name.length > 200) {
-        showNotification('Ошибка', 'Название товара слишком длинное (максимум 200 символов)', 'error');
-        return;
-      }
-      if (!url) {
-        showNotification('Ошибка', 'Введите ссылку на товар', 'error');
-        return;
-      }
-      
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
-      }
-      
-      if (!isValidUrl(url)) {
-        showNotification('Ошибка', 'Пожалуйста, введите корректную ссылку', 'error');
-        return;
-      }
-      
-      if (url.length > 500) {
-        showNotification('Ошибка', 'Ссылка слишком длинная (максимум 500 символов)', 'error');
-        return;
-      }
-      
-      if (details && details.length > 1000) {
-        showNotification('Ошибка', 'Дополнительная информация слишком длинная (максимум 1000 символов)', 'error');
-        return;
-      }
-      
-      if (contact && contact.length > 100) {
-        showNotification('Ошибка', 'Контактные данные слишком длинные (максимум 100 символов)', 'error');
-        return;
-      }
-      
+
+      if (!category) { showNotification('Ошибка', 'Выберите категорию', 'error'); return; }
+      if (!name) { showNotification('Ошибка', 'Введите название товара', 'error'); return; }
+      if (name.length < 3) { showNotification('Ошибка', 'Название товара слишком короткое', 'error'); return; }
+      if (name.length > 200) { showNotification('Ошибка', 'Название товара слишком длинное', 'error'); return; }
+      if (!url) { showNotification('Ошибка', 'Введите ссылку на товар', 'error'); return; }
+
+      if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+      if (!isValidUrl(url)) { showNotification('Ошибка', 'Введите корректную ссылку', 'error'); return; }
+      if (url.length > 500) { showNotification('Ошибка', 'Ссылка слишком длинная', 'error'); return; }
+      if (details && details.length > 1000) { showNotification('Ошибка', 'Доп. информация слишком длинная', 'error'); return; }
+      if (contact && contact.length > 100) { showNotification('Ошибка', 'Контактные данные слишком длинные', 'error'); return; }
+
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/suggestions`, {
           method: 'POST',
@@ -380,35 +300,31 @@
             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
           },
           body: JSON.stringify({
-            category: category,
-            name: name,
-            url: url,
+            category, name, url,
             details: details || null,
             contact: contact || null,
             status: 'pending',
             created_at: new Date().toISOString()
           })
         });
-        
+
         if (response.ok) {
           document.getElementById('suggest-category').value = '';
           document.getElementById('suggest-name').value = '';
           document.getElementById('suggest-url').value = '';
           document.getElementById('suggest-details').value = '';
           document.getElementById('suggest-contact').value = '';
-          
           closeSuggestModal();
-          showNotification('Спасибо!', 'Ваше предложение отправлено. Мы рассмотрим его в ближайшее время.', 'success');
+          showNotification('Спасибо!', 'Ваше предложение отправлено.', 'success');
         } else {
           throw new Error('Ошибка отправки');
         }
       } catch (error) {
         console.error('Ошибка:', error);
-        showNotification('Ошибка', 'Не удалось отправить предложение. Попробуйте позже.', 'error');
+        showNotification('Ошибка', 'Не удалось отправить предложение.', 'error');
       }
     }
 
-    // ==================== ФУНКЦИИ МОДАЛЬНЫХ ОКОН ====================
     window.openSuggestModal = function() {
       document.getElementById('suggest-modal').classList.add('active');
     };
@@ -444,17 +360,11 @@
       openCompareModal();
     };
     window.goToComparePage = function() {
-      if (compareList.length < 2) {
-        showNotification('Внимание', 'Добавьте минимум 2 товара для сравнения', 'info');
-        return;
-      }
+      if (compareList.length < 2) { showNotification('Внимание', 'Добавьте минимум 2 товара', 'info'); return; }
       window.location.href = `compare.html?ids=${compareList.map(item => `${item.category}:${item.id}`).join(',')}`;
     };
     window.goToCompare = function() {
-      if (compareList.length < 2) {
-        showNotification('Внимание', 'Добавьте минимум 2 товара для сравнения', 'info');
-        return;
-      }
+      if (compareList.length < 2) { showNotification('Внимание', 'Добавьте минимум 2 товара', 'info'); return; }
       window.location.href = `compare.html?ids=${compareList.map(item => `${item.category}:${item.id}`).join(',')}`;
     };
 
@@ -472,7 +382,7 @@
     window.addToCompare = function(id, name, category, event) {
       if (event) event.stopPropagation();
       if (compareList.length > 0 && compareList[0].category !== category) {
-        showNotification('Ошибка', `Нельзя сравнивать товары из разных категорий! У вас уже есть ${CATEGORIES[compareList[0].category]?.name} в списке.`, 'error');
+        showNotification('Ошибка', `Нельзя сравнивать товары из разных категорий!`, 'error');
         return;
       }
       if (compareList.some(item => item.id === id)) {
@@ -480,7 +390,7 @@
         return;
       }
       if (compareList.length >= 4) {
-        showNotification('Внимание', 'Можно сравнивать не более 4 товаров одновременно', 'info');
+        showNotification('Внимание', 'Можно сравнивать не более 4 товаров', 'info');
         return;
       }
       compareList.push({ id, name, category });
@@ -489,7 +399,6 @@
       showNotification('Добавлено', `${name} добавлен в сравнение`, 'success');
     };
 
-    // ==================== НОРМАЛИЗАЦИЯ ====================
     function normalizeManufacturer(name) {
       if (!name) return '';
       let normalized = name.trim();
@@ -513,7 +422,6 @@
       return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
     }
 
-    // ==================== КОНФИГУРАЦИЯ КАТЕГОРИЙ ====================
     const CATEGORIES = {
       gpu: {
         name: 'Видеокарты',
@@ -691,7 +599,6 @@
       }
     };
 
-    // ==================== ФУНКЦИЯ ПОИСКА ====================
     function filterBySearch(products, query) {
       if (!query || query.trim() === '') return products;
       const lowerQuery = query.toLowerCase().trim();
@@ -719,7 +626,7 @@
       searchQuery = searchInputField ? searchInputField.value : '';
       let filtered = filterBySearch(allProducts, searchQuery);
       const config = CATEGORIES[currentCategory];
-      
+
       const selectedManufacturers = Array.from(document.querySelectorAll('.filter-manufacturer:checked')).map(cb => cb.value);
       if (selectedManufacturers.length) filtered = filtered.filter(p => selectedManufacturers.includes(config.getManufacturer(p)));
       const selectedChipsets = Array.from(document.querySelectorAll('.filter-chipset:checked')).map(cb => cb.value);
@@ -750,21 +657,18 @@
       if (selectedColors.length) filtered = filtered.filter(p => selectedColors.includes(p.color?.[0]));
       const selectedSidePanels = Array.from(document.querySelectorAll('.filter-side-panel:checked')).map(cb => cb.value);
       if (selectedSidePanels.length) filtered = filtered.filter(p => selectedSidePanels.includes(p.side_panel));
-      
+
       filteredProducts = filtered;
       currentPage = 1;
       updatePagination();
       saveCategoryState();
     }
 
-    function handleCatalogSearch(e) {
+    function handleCatalogSearch() {
       if (searchTimeout) clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        updateSearchAndFilter();
-      }, 300);
+      searchTimeout = setTimeout(() => updateSearchAndFilter(), 300);
     }
 
-    // ==================== СОХРАНЕНИЕ СОСТОЯНИЯ ====================
     function saveCategoryState() {
       localStorage.setItem('iron_last_category', currentCategory);
       localStorage.setItem('iron_last_page', currentPage);
@@ -790,7 +694,6 @@
       return null;
     }
 
-    // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadCategory(category) {
       const config = CATEGORIES[category];
       if (!config) return [];
@@ -807,7 +710,6 @@
       }
     }
 
-    // ==================== ФИЛЬТРЫ UI ====================
     function createFilterGroup(title, items, filterClass) {
       if (!items || items.length === 0) return '';
       const sortedItems = [...items].sort((a, b) => {
@@ -817,14 +719,15 @@
       const groupId = title.replace(/\s/g, '_');
       let html = `<div class="filter-group" id="group_${groupId}">`;
       html += `<div class="filter-toggle" onclick="toggleFilterGroup('${groupId}')">`;
-      html += `<h4>${title}</h4>`;
+      html += `<h3>${title}</h3>`;
       html += `<span class="filter-arrow">▼</span>`;
       html += `</div>`;
       html += `<div class="filter-options">`;
-      html += `<input type="text" class="filter-search" placeholder="Поиск..." oninput="filterSearchOptions('${groupId}', this.value)">`;
+      html += `<input type="text" class="filter-search" placeholder="Поиск..." oninput="filterSearchOptions('${groupId}', this.value)" aria-label="Поиск в фильтре ${title}">`;
       for (const item of sortedItems) {
         html += `<div class="filter-option searchable-option" data-value="${escapeHtml(item)}">
-          <input type="checkbox" value="${escapeHtml(item)}" class="${filterClass}"> <label>${escapeHtml(item)}</label>
+          <input type="checkbox" value="${escapeHtml(item)}" class="${filterClass}" id="filter_${groupId}_${escapeHtml(item)}"> 
+          <label for="filter_${groupId}_${escapeHtml(item)}">${escapeHtml(item)}</label>
         </div>`;
       }
       html += `</div></div>`;
@@ -902,9 +805,7 @@
       });
     }
 
-    function onFilterChange() {
-      updateSearchAndFilter();
-    }
+    function onFilterChange() { updateSearchAndFilter(); }
 
     function escapeHtml(text) {
       if (!text && text !== 0) return '';
@@ -918,7 +819,6 @@
       return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
     }
 
-    // ==================== ОТОБРАЖЕНИЕ ====================
     function renderProducts() {
       const grid = document.getElementById('products-grid');
       const start = (currentPage - 1) * itemsPerPage;
@@ -935,16 +835,16 @@
         const specs = config.getSpecs(product);
         const productId = config.getId(product);
         return `
-          <div class="product-card" onclick="window.location.href='product.html?category=${currentCategory}&id=${productId}'" onmouseenter="window.updateHoveredCard?.(this)" onmouseleave="window.updateHoveredCard?.(null)">
+          <article class="product-card" onclick="window.location.href='product.html?category=${currentCategory}&id=${productId}'" onmouseenter="window.updateHoveredCard?.(this)" onmouseleave="window.updateHoveredCard?.(null)" role="listitem">
             <div class="product-header"><span class="product-manufacturer">${escapeHtml(manufacturer)}</span></div>
-            <div class="product-name">${escapeHtml(shortName)}</div>
+            <h3 class="product-name">${escapeHtml(shortName)}</h3>
             <div class="specs-list">
               ${specs.map(s => `<span>${s.label}: ${escapeHtml(String(s.value))}</span>`).join('')}
             </div>
             <div class="product-footer">
               <button class="btn-compare" onclick="addToCompare('${productId}', '${escapeForOnClick(displayName)}', '${currentCategory}', event)">Сравнить</button>
             </div>
-          </div>
+          </article>
         `;
       }).join('');
       updateResultsInfo();
@@ -964,12 +864,12 @@
     function renderPagination() {
       const container = document.getElementById('pagination');
       if (totalPages <= 1) { container.innerHTML = ''; return; }
-      let html = `<button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage===1 ? 'disabled' : ''}>←</button>`;
+      let html = `<button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage===1 ? 'disabled' : ''} aria-label="Предыдущая страница">←</button>`;
       if (currentPage > 3) html += `<button class="page-btn" onclick="goToPage(1)">1</button>${currentPage > 4 ? '<span class="page-info">...</span>' : ''}`;
       for (let i = Math.max(1, currentPage-2); i <= Math.min(totalPages, currentPage+2); i++)
         html += `<button class="page-btn ${i===currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
       if (currentPage < totalPages-2) html += `${currentPage < totalPages-3 ? '<span class="page-info">...</span>' : ''}<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
-      html += `<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage===totalPages ? 'disabled' : ''}>→</button>`;
+      html += `<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage===totalPages ? 'disabled' : ''} aria-label="Следующая страница">→</button>`;
       container.innerHTML = html;
     }
 
@@ -1025,14 +925,15 @@
       document.getElementById('reset-filters')?.addEventListener('click', resetFilters);
     }
 
-    // ==================== ИНИЦИАЛИЗАЦИЯ ====================
-    window.addEventListener('beforeunload', () => { saveCategoryState(); });
+    window.addEventListener('beforeunload', () => saveCategoryState());
     document.addEventListener('click', (e) => { 
       if (e.target === document.getElementById('compare-modal')) closeCompareModal();
       if (e.target === document.getElementById('suggest-modal')) closeSuggestModal();
     });
 
     window.addEventListener('load', async () => {
+      initFiltersToggle();
+
       const urlCategory = getCategoryFromURL();
       const savedState = restoreCategoryState();
       let targetCategory = 'gpu';
@@ -1047,15 +948,11 @@
       updateDynamicFilters(allProducts);
       attachCategoryListeners();
       const searchInputField = document.getElementById('catalog-search-input');
-      if (searchInputField && searchQuery) {
-        searchInputField.value = searchQuery;
-      }
+      if (searchInputField && searchQuery) searchInputField.value = searchQuery;
       updateSearchAndFilter();
       if (savedState.scroll > 0) setTimeout(() => window.scrollTo({ top: savedState.scroll, behavior: 'instant' }), 100);
       updateCompareBar();
-      if (searchInputField) {
-        searchInputField.addEventListener('input', handleCatalogSearch);
-      }
+      if (searchInputField) searchInputField.addEventListener('input', handleCatalogSearch);
       checkHighlight();
     });
   </script>

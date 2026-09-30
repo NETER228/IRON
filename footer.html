@@ -1,50 +1,47 @@
-<footer style="border-top: var(--border-width) solid var(--border-color); padding: 3rem 1.5rem; margin-top: 5rem;">
-  <div style="max-width: 80rem; margin: 0 auto;">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+<footer class="site-footer">
+  <div class="footer-container">
+    <div class="footer-grid">
       
-      <div>
-        <h3 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; background: linear-gradient(135deg, var(--accent-iron) 0%, var(--accent-iron-dark) 100%); -webkit-background-clip: text; background-clip: text; color: transparent;">IRON</h3>
-        <p style="font-size: 0.875rem; color: var(--text-muted);">Интерактивная Российская Онлайн-база компьютерного железа</p>
+      <div class="footer-col">
+        <h3 class="footer-logo">IRON</h3>
+        <p class="footer-text">Интерактивная Российская Онлайн-база компьютерного железа</p>
       </div>
       
-      <div>
-        <h4 style="font-weight: 600; margin-bottom: 1rem;">Категории</h4>
-        <ul style="list-style: none; padding: 0;">
-          <li><a href="catalog.html?category=gpu" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; display: block; margin-bottom: 0.5rem; transition: color 0.2s;" onmouseenter="this.style.color='var(--accent-cyan)'" onmouseleave="this.style.color='var(--text-muted)'">Видеокарты</a></li>
-          <li><a href="catalog.html?category=cpu" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; display: block; margin-bottom: 0.5rem; transition: color 0.2s;" onmouseenter="this.style.color='var(--accent-cyan)'" onmouseleave="this.style.color='var(--text-muted)'">Процессоры</a></li>
-          <li><a href="catalog.html?category=motherboard" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; display: block; margin-bottom: 0.5rem; transition: color 0.2s;" onmouseenter="this.style.color='var(--accent-cyan)'" onmouseleave="this.style.color='var(--text-muted)'">Материнские платы</a></li>
-          <li><a href="catalog.html?category=ram" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; display: block; margin-bottom: 0.5rem; transition: color 0.2s;" onmouseenter="this.style.color='var(--accent-cyan)'" onmouseleave="this.style.color='var(--text-muted)'">Оперативная память</a></li>
-          <li><a href="catalog.html?category=storage" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; display: block; margin-bottom: 0.5rem; transition: color 0.2s;" onmouseenter="this.style.color='var(--accent-cyan)'" onmouseleave="this.style.color='var(--text-muted)'">SSD накопители</a></li>
-          <li><a href="catalog.html?category=psu" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; display: block; margin-bottom: 0.5rem; transition: color 0.2s;" onmouseenter="this.style.color='var(--accent-cyan)'" onmouseleave="this.style.color='var(--text-muted)'">Блоки питания</a></li>
-          <li><a href="catalog.html?category=case" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; display: block; margin-bottom: 0.5rem; transition: color 0.2s;" onmouseenter="this.style.color='var(--accent-cyan)'" onmouseleave="this.style.color='var(--text-muted)'">Корпуса</a></li>
+      <nav class="footer-col" aria-label="Категории">
+        <h4 class="footer-heading">Категории</h4>
+        <ul class="footer-list">
+          <li><a href="catalog.html?category=gpu" class="footer-link" title="Видеокарты">Видеокарты</a></li>
+          <li><a href="catalog.html?category=cpu" class="footer-link" title="Процессоры">Процессоры</a></li>
+          <li><a href="catalog.html?category=motherboard" class="footer-link" title="Материнские платы">Материнские платы</a></li>
+          <li><a href="catalog.html?category=ram" class="footer-link" title="Оперативная память">Оперативная память</a></li>
+          <li><a href="catalog.html?category=storage" class="footer-link" title="SSD накопители">SSD накопители</a></li>
+          <li><a href="catalog.html?category=psu" class="footer-link" title="Блоки питания">Блоки питания</a></li>
+          <li><a href="catalog.html?category=case" class="footer-link" title="Корпуса">Корпуса</a></li>
         </ul>
-      </div>
+      </nav>
       
-      <div>
-        <h4 style="font-weight: 600; margin-bottom: 1rem;">Информация</h4>
-        <ul style="list-style: none; padding: 0;">
-          <li><a href="index.html#about-project" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; display: block; margin-bottom: 0.5rem; transition: color 0.2s;" onmouseenter="this.style.color='var(--accent-cyan)'" onmouseleave="this.style.color='var(--text-muted)'">О проекте</a></li>
-          <li style="margin-top: 0.5rem;">
-            <span style="color: var(--text-muted); font-size: 0.875rem; display: block; margin-bottom: 0.25rem; font-weight: 500;">Команда:</span>
-            <span style="color: var(--accent-cyan); font-size: 0.875rem; display: block;">sulesovmaksim@gmail.com</span>
+      <div class="footer-col">
+        <h4 class="footer-heading">Информация</h4>
+        <ul class="footer-list">
+          <li><a href="index.html#about-project" class="footer-link" title="О проекте IRON">О проекте</a></li>
+          <li class="footer-contact">
+            <span class="footer-contact-label">Команда:</span>
+            <span class="footer-contact-value">sulesovmaksim@gmail.com</span>
           </li>
         </ul>
       </div>
       
-      <div>
-        <h4 style="font-weight: 600; margin-bottom: 1rem;">Студенческий проект</h4>
-        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">© 2026 IRON Team</p>
-        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.75rem;">Open source проект</p>
-        <a href="https://github.com/NETER228/IRON" target="_blank" 
-           style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-cyan); text-decoration: none; font-size: 0.875rem; transition: all 0.2s;"
-           onmouseenter="this.style.textDecoration='underline'"
-           onmouseleave="this.style.textDecoration='none'">
+      <div class="footer-col">
+        <h4 class="footer-heading">Студенческий проект</h4>
+        <p class="footer-text">© 2026 IRON Team</p>
+        <p class="footer-text">Open source проект</p>
+        <a href="https://github.com/NETER228/IRON" target="_blank" rel="noopener noreferrer" class="footer-link footer-link-accent" title="GitHub проекта IRON">
           GitHub проекта →
         </a>
       </div>
     </div>
     
-    <div style="text-align: center; padding-top: 2rem; border-top: var(--border-width) solid var(--border-color); font-size: 0.875rem; color: var(--text-muted);">
+    <div class="footer-bottom">
       Сделано студентами для российского DIY-сообщества. Спасибо проекту "BuildCores" за открытое предоставление базы данных
     </div>
   </div>
